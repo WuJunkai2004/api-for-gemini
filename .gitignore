@@ -1,0 +1,35 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.*
+uv.lock
+
+# Python version
+.python-version
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project
+dist/
+build/
+*.egg-info/
+
+# Runtime Configure
+config.toml
