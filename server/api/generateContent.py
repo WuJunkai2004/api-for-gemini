@@ -1,49 +1,64 @@
-import httpx
-from fastapi import APIRouter, Request
-from fastapi.responses import StreamingResponse
+import json
+
+from fastapi import APIRouter, Header
+from fastapi.responses import JSONResponse, StreamingResponse
+from google.genai import Client
+from google.genai.types import GenerateContentConfig
 
 from server.schema.request.google import GoogleRequest
-from server.schema.response.google import GoogleReponse
 
 router = APIRouter()
 
-GOOGLE_BASE_URL = "https://generativelanguage.googleapis.com"
+
+def _build_config(req: GoogleRequest) -> GenerateContentConfig | None:
+    if req.generation_config is None and req.system_instruction is None:
+        return None
+    config = req.generation_config or GenerateContentConfig()
+    if req.system_instruction is not None:
+        config.system_instruction = req.system_instruction
+    return config
 
 
 @router.post("{model}:generateContent")
-async def generate_content(request: Request, model: str):
-    body = await request.json()
-    GoogleRequest.model_validate(body)
+async def generate_content(
+    google_request: GoogleRequest,
+    model: str,
+    x_goog_api_key: str = Header(default=""),
+):
+    client = Client(api_key=x_goog_api_key)
+    config = _build_config(google_request)
 
-    api_key = request.headers.get("x-goog-api-key", "")
-    url = f"{GOOGLE_BASE_URL}/v1beta/models/{model}:generateContent?key={api_key}"
+    kwargs: dict = {"model": model, "contents": google_request.contents}
+    if config is not None:
+        kwargs["config"] = config
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(url, json=body)
-        resp.raise_for_status()
-        data = resp.json()
-
-    GoogleReponse.model_validate(data)
-    return data
+    response = await client.aio.models.generate_content(**kwargs)
+    data = response.model_dump(exclude_none=True, mode="json")
+    return JSONResponse(content=data)
 
 
 @router.post("{model}:streamGenerateContent")
-async def stream_generate_content(request: Request, model: str):
-    body = await request.json()
-    GoogleRequest.model_validate(body)
+async def stream_generate_content(
+    google_request: GoogleRequest,
+    model: str,
+    x_goog_api_key: str = Header(default=""),
+):
+    client = Client(api_key=x_goog_api_key)
+    config = _build_config(google_request)
 
-    api_key = request.headers.get("x-goog-api-key", "")
-    url = f"{GOOGLE_BASE_URL}/v1beta/models/{model}:streamGenerateContent?key={api_key}&alt=sse"
+    kwargs: dict = {"model": model, "contents": google_request.contents}
+    if config is not None:
+        kwargs["config"] = config
 
-    async with httpx.AsyncClient() as client:
-        async with client.stream("POST", url, json=body) as resp:
-            resp.raise_for_status()
+    response_stream = await client.aio.models.generate_content_stream(**kwargs)
 
-            async def stream():
-                async for chunk in resp.aiter_bytes():
-                    yield chunk
+    async def _sse_generator():
+        async for chunk in response_stream:
+            chunk_dict = chunk.model_dump(exclude_none=True, mode="json")
+            yield f"data: {json.dumps(chunk_dict)}\n\n"
+        yield "data: [DONE]\n\n"
 
-            return StreamingResponse(
-                stream(),
-                media_type="text/event-stream",
-            )
+    return StreamingResponse(
+        _sse_generator(),
+        media_type="text/event-stream",
+    )

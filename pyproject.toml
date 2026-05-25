@@ -1,0 +1,11 @@
+[project]
+name = "grovider"
+version = "0.1.0"
+description = "OpenAI-compatible API proxy for Gemini"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.136.3",
+    "uvicorn[standard]>=0.34.0",
+    "google-genai>=1.14.0",
+    "openai>=2.38.0",
+]
