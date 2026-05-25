@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from google.genai import Client
 from google.genai.types import GenerateContentConfig
 
-from server.schema.request.google import GoogleRequest
+from server.schema.request import GoogleRequest
 
 router = APIRouter()
 
@@ -19,14 +19,13 @@ def _build_config(req: GoogleRequest) -> GenerateContentConfig | None:
     return config
 
 
-@router.post("/{model}:generateContent")
+# @router.post("/{model}:generateContent")
 async def generate_content(
     google_request: GoogleRequest,
     model: str,
     x_goog_api_key: str = Header(default=""),
 ):
-    print("not support")
-    raise HTTPException(status_code=404, detail="Item not found")
+    pass
 
 
 @router.post("/{model}:streamGenerateContent")
