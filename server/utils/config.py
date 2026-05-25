@@ -1,4 +1,7 @@
-import tomllib
+try:
+    import tomllib  # type: ignore
+except ImportError:
+    import tomli as tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -6,7 +9,7 @@ from typing import Any
 from google.genai import Client as GeminiClient
 from openai import AsyncOpenAI as OpenAIClient
 
-type AIClient = OpenAIClient | GeminiClient | None
+AIClient = OpenAIClient | GeminiClient | None
 
 
 @dataclass
@@ -28,7 +31,10 @@ class ModelConfig:
 
     def __post_init__(self):
         if self.schema == "gemini":
-            self._client = GeminiClient(api_key=self.api_key)
+            self._client = GeminiClient(api_key=self.api_key,
+               http_options={
+                     "base_url": self.api_url,
+               })
         else:
             self._client = OpenAIClient(
                 base_url=self.api_url,

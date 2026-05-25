@@ -6,6 +6,7 @@ from google.genai.types import (
     Candidate,
     Content,
     FinishReason,
+    FunctionCall,
     GenerateContentConfig,
     GenerateContentResponse,
     GenerateContentResponseUsageMetadata,
@@ -46,9 +47,26 @@ def _map_finish_reason(reason: str | None) -> FinishReason | None:
     return mapping.get(reason)
 
 
+def _convert_tool_calls_to_parts(tool_calls) -> list[Part]:
+    parts = []
+    for tc in tool_calls:
+        args = {}
+        if tc.function.arguments:
+            try:
+                args = json.loads(tc.function.arguments)
+            except (json.JSONDecodeError, TypeError):
+                args = {}
+        parts.append(Part(function_call=FunctionCall(name=tc.function.name, args=args)))
+    return parts
+
+
 def _convert_openai_response(response) -> GenerateContentResponse:
     choice = response.choices[0]
-    parts = [Part(text=choice.message.content)] if choice.message.content else []
+    parts: list[Part] = []
+    if choice.message.content:
+        parts.append(Part(text=choice.message.content))
+    if choice.message.tool_calls:
+        parts.extend(_convert_tool_calls_to_parts(choice.message.tool_calls))
     candidate = Candidate(
         content=Content(role="model", parts=parts),
         finish_reason=_map_finish_reason(choice.finish_reason),
@@ -71,9 +89,22 @@ def _convert_openai_stream_chunk(chunk) -> GenerateContentResponse:
         return GenerateContentResponse(candidates=[])
     choice = chunk.choices[0]
     delta = choice.delta
-    text = delta.content or ""
+    parts: list[Part] = []
+    if delta.content:
+        parts.append(Part(text=delta.content))
+    if delta.tool_calls:
+        for tc in delta.tool_calls:
+            args = {}
+            if tc.function.arguments:
+                try:
+                    args = json.loads(tc.function.arguments)
+                except (json.JSONDecodeError, TypeError):
+                    args = {}
+            parts.append(
+                Part(function_call=FunctionCall(name=tc.function.name, args=args))
+            )
     candidate = Candidate(
-        content=Content(role="model", parts=[Part(text=text)] if text else []),
+        content=Content(role="model", parts=parts),
         finish_reason=_map_finish_reason(choice.finish_reason),
     )
     return GenerateContentResponse(candidates=[candidate])
