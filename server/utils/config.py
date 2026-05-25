@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Any
 
 from google.genai import Client as GeminiClient
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI as OpenAIClient
+
+type AIClient = OpenAIClient | GeminiClient | None
 
 
 @dataclass
@@ -28,12 +30,12 @@ class ModelConfig:
         if self.schema == "gemini":
             self._client = GeminiClient(api_key=self.api_key)
         else:
-            self._client = AsyncOpenAI(
+            self._client = OpenAIClient(
                 base_url=self.api_url,
                 api_key=self.api_key,
             )
 
-    def get_client(self) -> AsyncOpenAI | GeminiClient | None:
+    def get_client(self) -> AIClient:
         return self._client
 
 
@@ -123,7 +125,7 @@ class ConfigManager:
     def get_model(self, name: str) -> ModelConfig | None:
         return self._config.models.get(name)
 
-    def get_client(self, name: str) -> AsyncOpenAI | GeminiClient | None:
+    def get_client(self, name: str) -> AIClient:
         model = self._config.models.get(name)
         if model:
             return model.get_client()
@@ -140,3 +142,6 @@ class ConfigManager:
     @classmethod
     def reset(cls):
         cls._instance = None
+
+
+config = ConfigManager(Path(__file__).parent.parent.parent / "config.toml")
