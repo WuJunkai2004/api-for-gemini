@@ -20,11 +20,17 @@ router = APIRouter()
 
 
 def _build_config(req: GoogleRequest) -> GenerateContentConfig | None:
-    if req.generation_config is None and req.system_instruction is None:
+    if (
+        req.generation_config is None
+        and req.system_instruction is None
+        and req.tools is None
+    ):
         return None
     config = req.generation_config or GenerateContentConfig()
     if req.system_instruction is not None:
         config.system_instruction = req.system_instruction
+    if req.tools is not None:
+        config.tools = req.tools
     return config
 
 
@@ -88,7 +94,10 @@ async def generate_content(
 
     if target.schema == "gemini":
         config = _build_config(kwargs)
-        call_kwargs: dict = {"model": target.model or model, "contents": kwargs.contents}
+        call_kwargs: dict = {
+            "model": target.model or model,
+            "contents": kwargs.contents,
+        }
         if config is not None:
             call_kwargs["config"] = config
         return await client.aio.models.generate_content(**call_kwargs)
@@ -112,7 +121,10 @@ async def stream_generate_content(
 
     if target.schema == "gemini":
         config = _build_config(kwargs)
-        call_kwargs: dict = {"model": target.model or model, "contents": kwargs.contents}
+        call_kwargs: dict = {
+            "model": target.model or model,
+            "contents": kwargs.contents,
+        }
         if config is not None:
             call_kwargs["config"] = config
         response_stream = await client.aio.models.generate_content_stream(**call_kwargs)
@@ -121,7 +133,6 @@ async def stream_generate_content(
             async for chunk in response_stream:
                 chunk_dict = chunk.model_dump(exclude_none=True, mode="json")
                 yield f"data: {json.dumps(chunk_dict)}\n\n"
-            yield "data: [DONE]\n\n"
 
         return StreamingResponse(_sse_generator(), media_type="text/event-stream")
 
@@ -133,6 +144,5 @@ async def stream_generate_content(
             gemini_chunk = _convert_openai_stream_chunk(chunk)
             chunk_dict = gemini_chunk.model_dump(exclude_none=True, mode="json")
             yield f"data: {json.dumps(chunk_dict)}\n\n"
-        yield "data: [DONE]\n\n"
 
     return StreamingResponse(_sse_generator(), media_type="text/event-stream")

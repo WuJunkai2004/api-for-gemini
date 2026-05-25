@@ -5,6 +5,7 @@ from google.genai.types import (
     GenerateContentConfig,
     Part,
     ThinkingConfig,
+    Tool,
 )
 from pydantic import BaseModel
 
@@ -15,3 +16,4 @@ class GoogleRequest(BaseModel):
     contents: list[Content]
     system_instruction: Optional[Content] = None
     generation_config: Optional[GenerateContentConfig] = None
+    tools: Optional[list[Tool]] = None
