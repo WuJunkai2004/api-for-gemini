@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from google.genai import Client
 from google.genai.types import GenerateContentConfig
@@ -19,30 +19,23 @@ def _build_config(req: GoogleRequest) -> GenerateContentConfig | None:
     return config
 
 
-@router.post("{model}:generateContent")
+@router.post("/{model}:generateContent")
 async def generate_content(
     google_request: GoogleRequest,
     model: str,
     x_goog_api_key: str = Header(default=""),
 ):
-    client = Client(api_key=x_goog_api_key)
-    config = _build_config(google_request)
-
-    kwargs: dict = {"model": model, "contents": google_request.contents}
-    if config is not None:
-        kwargs["config"] = config
-
-    response = await client.aio.models.generate_content(**kwargs)
-    data = response.model_dump(exclude_none=True, mode="json")
-    return JSONResponse(content=data)
+    print("not support")
+    raise HTTPException(status_code=404, detail="Item not found")
 
 
-@router.post("{model}:streamGenerateContent")
+@router.post("/{model}:streamGenerateContent")
 async def stream_generate_content(
     google_request: GoogleRequest,
     model: str,
     x_goog_api_key: str = Header(default=""),
 ):
+    raise HTTPException(status_code=404, detail="Item not found")
     client = Client(api_key=x_goog_api_key)
     config = _build_config(google_request)
 

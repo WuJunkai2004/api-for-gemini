@@ -1,7 +1,10 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+os.environ.clear()
 
 from server.api.generateContent import router as generate_content_router
 from server.api.probe import router as probe_router
@@ -9,7 +12,6 @@ from server.api.probe import router as probe_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # clear the screen
     print("\033[H\033[J")
     yield
 
