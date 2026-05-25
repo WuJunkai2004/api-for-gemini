@@ -1,7 +1,7 @@
 import json
 
 from fastapi import APIRouter, Header, HTTPException
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from google.genai import Client
 from google.genai.types import GenerateContentConfig
 
