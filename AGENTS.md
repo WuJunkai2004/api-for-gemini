@@ -15,7 +15,7 @@ Gemini API proxy that receives Google Gemini API requests and routes them to Gem
 - `server/main.py` — FastAPI app. **Calls `os.environ.clear()` at module level (line 7)** — all env vars are wiped on import.
 - `server/api/generateContent.py` — `POST /v1beta/models/{model}:generateContent` and `:streamGenerateContent`. Converts between Gemini and OpenAI request/response formats depending on the target backend's `schema`.
 - `server/api/probe.py` — catch-all route for debugging; logs full request details.
-- `server/schema/request.py` — Pydantic `GoogleRequest` model wrapping `google-genai` types.
+- `server/schema/request.py` — Pydantic `APIRequest` model wrapping `google-genai` types.
 - `server/schema/model/` — request transfer logic: `to_openai.py` (Gemini→OpenAI conversion), `to_gemini.py` (pass-through), `transfer.py` dispatches by target schema.
 - `server/utils/config.py` — `ConfigManager` singleton. Loads `config.toml` at import time. Call `ConfigManager.reset()` in tests to allow re-initialization.
 - `config.toml` — **gitignored** runtime config (API keys, provider URLs, model definitions, transfer rules). Must exist locally to run.

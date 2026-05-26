@@ -3,14 +3,12 @@ from typing import Optional
 from google.genai.types import (
     Content,
     GenerateContentConfig,
-    Part,
-    ThinkingConfig,
     Tool,
 )
 from pydantic import BaseModel
 
 
-class GoogleRequest(BaseModel):
+class APIRequest(BaseModel):
     model_config = GenerateContentConfig.model_config
 
     contents: list[Content]
