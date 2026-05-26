@@ -7,6 +7,7 @@ Gemini API proxy that receives Google Gemini API requests and routes them to Gem
 - **Python 3.10+**, using standard venv + pip.
 - Install: `pip install -e .`
 - Run dev server: `python main.py` (uvicorn on port 18000 with hot reload)
+- Because the server is running in a clean environment with hot reload, you should not restart the server.
 
 ## Architecture
 

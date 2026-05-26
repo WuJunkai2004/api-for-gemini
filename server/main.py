@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-os.environ.clear()
+# os.environ.clear()
 
 from server.api.generateContent import router as generate_content_router
 from server.api.probe import router as probe_router
