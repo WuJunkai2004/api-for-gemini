@@ -69,10 +69,6 @@ class DeepseekRequest(ClientRequest):
             if not role:
                 raise ValueError(f"Unsupported role: {content.role}")
             for part in content.parts:
-                if not part.text:
-                    print(part)
-                    print("=" * 20)
-
                 # 处理工具调用
                 if part.function_call:
                     tools.append(
@@ -121,14 +117,18 @@ class DeepseekRequest(ClientRequest):
                     ChatCompletionUserMessageParam(role="user", content="".join(texts))
                 )
             elif role == "assistant":
+                payload = {
+                    "role": "assistant",
+                    "content": "".join(texts),
+                    "reasoning_content": "".join(thoughts)
+                    if len(thoughts) > 0
+                    else None,
+                }
+                if tools:
+                    payload["tool_calls"] = tools
                 messages.append(
-                    ChatCompletionReasoningMessageParam(
-                        role="assistant",
-                        content="".join(texts),
-                        tool_calls=tools,
-                        reasoning_content="".join(thoughts)
-                        if len(thoughts) > 0
-                        else None,
+                    ChatCompletionAssistantMessageParam(
+                        **payload,
                     )
                 )
             if role == "user" and len(tools) > 0:

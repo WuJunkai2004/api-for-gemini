@@ -4,7 +4,7 @@ from pathlib import Path
 from server.schema.model.openai import OpenaiRequest
 from server.schema.request import APIRequest
 
-file_path = Path(__file__).parent.parent / "example" / "cli_sent.json"
+file_path = Path(__file__).parent.parent / "referrence/receive/1779807931.json"
 
 
 def main():

@@ -65,10 +65,6 @@ class OpenaiRequest(ClientRequest):
             if not role:
                 raise ValueError(f"Unsupported role: {content.role}")
             for part in content.parts:
-                if not part.text:
-                    print(part)
-                    print("=" * 20)
-
                 # 处理工具调用
                 if part.function_call:
                     tools.append(
@@ -117,9 +113,15 @@ class OpenaiRequest(ClientRequest):
                     ChatCompletionUserMessageParam(role="user", content="".join(texts))
                 )
             elif role == "assistant":
+                payload = {
+                    "role": "assistant",
+                    "content": "".join(texts),
+                }
+                if tools:
+                    payload["tool_calls"] = tools  # type: ignore
                 messages.append(
                     ChatCompletionAssistantMessageParam(
-                        role="assistant", content="".join(texts), tool_calls=tools
+                        **payload,  # type: ignore
                     )
                 )
             if role == "user" and len(tools) > 0:

@@ -129,8 +129,14 @@ async def generate_content(req: APIRequest, model: str):
 
     match target.template:
         case "deepseek":
-            return _convert_openai_response(result, model)
+            gemini_response = _convert_openai_response(result, model)
+            return gemini_response.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         case "openai":
-            return _convert_openai_response(result, model)
+            gemini_response = _convert_openai_response(result, model)
+            return gemini_response.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         case "gemini":
-            return result
+            return result.model_dump(by_alias=True, exclude_none=True, mode="json")

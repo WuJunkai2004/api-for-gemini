@@ -1,12 +1,10 @@
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# os.environ.clear()
-
 from server.api.generateContent import router as generate_content_router
+from server.api.generateStreaming import router as generate_streaming_router
 from server.api.probe import router as probe_router
 
 
@@ -28,4 +26,5 @@ app.add_middleware(
 
 
 app.include_router(generate_content_router, prefix="/v1beta/models")
+app.include_router(generate_streaming_router, prefix="/v1beta/models")
 app.include_router(probe_router)
