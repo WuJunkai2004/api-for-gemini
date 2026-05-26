@@ -2,60 +2,80 @@ try:
     import tomllib  # type: ignore
 except ImportError:
     import tomli as tomllib
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Literal, Optional
 
 from google.genai import Client as GeminiClient
 from openai import AsyncOpenAI as OpenAIClient
+from pydantic import BaseModel, model_validator
 
-AIClient = OpenAIClient | GeminiClient | None
+AIClient = OpenAIClient | GeminiClient
 
 
-@dataclass
-class ProviderConfig:
-    name: str
-    schema: str
+class ProviderSchema(BaseModel):
+    template: Literal["gemini", "openai", "deepseek"] = "openai"
     api_url: str
-    api_key: str
+    api_key: Optional[str] = None
 
 
-@dataclass
-class ModelConfig:
-    name: str
-    schema: str = ""
-    api_url: str = ""
-    api_key: str = ""
-    model: str = ""
-    _client: Any = field(default=None, init=False, repr=False)
+class ModelSchema(BaseModel):
+    provider: Optional[str] = None
+    api_url: Optional[str] = None
+    api_key: Optional[str] = None
+    template: Literal["gemini", "openai", "deepseek"] = "openai"
+    model: str
 
-    def __post_init__(self):
-        if self.schema == "gemini":
-            self._client = GeminiClient(api_key=self.api_key,
-               http_options={
-                     "base_url": self.api_url,
-               })
-        else:
-            self._client = OpenAIClient(
-                base_url=self.api_url,
-                api_key=self.api_key,
-            )
-
-    def get_client(self) -> AIClient:
-        return self._client
+    # 验证：
+    # provider 和 api_url 不能同时存在也不能同时不存在
+    # 如果 provider 存在，则 api_url 和 api_key 必须为 None
+    # 如果同时不存在，则抛出异常
+    @model_validator(mode="after")
+    def fix(self) -> "ModelSchema":
+        if self.provider and self.api_url:
+            self.api_url = None
+            self.api_key = None
+        elif not self.provider and not self.api_url:
+            raise ValueError("Either provider or api_url must be provided.")
+        return self
 
 
-@dataclass
-class TransferConfig:
-    from_model: str
-    as_model: str
+class TransferSchema(BaseModel):
+    make: str
+    to: str
 
 
-@dataclass
-class Config:
-    providers: dict[str, ProviderConfig] = field(default_factory=dict)
-    models: dict[str, ModelConfig] = field(default_factory=dict)
-    transfers: list[TransferConfig] = field(default_factory=list)
+class Config(BaseModel):
+    provider: dict[str, ProviderSchema]
+    model: dict[str, ModelSchema]
+    transfer: list[TransferSchema]
+
+    @model_validator(mode="after")
+    def finish(self) -> "Config":
+        # 回填 model 中缺失的 api_url 和 api_key
+        for model_name, model in self.model.items():
+            if not model.provider:
+                continue
+            if model.provider not in self.provider:
+                raise ValueError(
+                    f"Model {model_name} references unknown provider {model.provider}."
+                )
+            # 如果 model.provider 存在，则回填 model.api_url 和 model.api_key
+            provider = self.provider[model.provider]
+            model.api_url = provider.api_url
+            model.api_key = provider.api_key
+            model.template = provider.template
+        # 验证 transfer 中的 to 是否都存在于 model 中
+        for pair in self.transfer:
+            if pair.to not in self.model:
+                raise ValueError(
+                    f"Transfer to {pair.to} references unknown model {pair.to}."
+                )
+        return self
+
+
+def _load(path: Path):
+    with path.open("rb") as f:
+        return tomllib.load(f)
 
 
 class ConfigManager:
@@ -71,83 +91,19 @@ class ConfigManager:
         if self._loaded:
             return
         self._loaded = True
-        self._config = Config()
-        if config_path is not None:
-            self.load(config_path)
+        if not config_path:
+            config_path = Path(__file__).parent.parent.parent / "config.toml"
 
-    def load(self, config_path: str | Path):
-        path = Path(config_path)
-        with open(path, "rb") as f:
-            data = tomllib.load(f)
-        self._parse(data)
+        self._config = Config.model_validate(_load(Path(config_path)))
+        self.ability = {pair.make: pair.to for pair in self._config.transfer}
 
-    def _parse(self, data: dict):
-        providers = data.get("provider", {})
-        for name, entries in providers.items():
-            if not isinstance(entries, list):
-                continue
-            for entry in entries:
-                self._config.providers[name] = ProviderConfig(
-                    name=name,
-                    schema=entry.get("schema", ""),
-                    api_url=entry.get("api_url", ""),
-                    api_key=entry.get("api_key", ""),
-                )
+    def get_model(self, name: str) -> ModelSchema:
+        """根据模型名称获取模型配置"""
+        return self._config.model[name]
 
-        models = data.get("model", {})
-        for name, entries in models.items():
-            if not isinstance(entries, list):
-                continue
-            for entry in entries:
-                provider_name = entry.get("provider", "")
-                provider = self._config.providers.get(provider_name)
-                self._config.models[name] = ModelConfig(
-                    name=name,
-                    schema=entry.get("schema", "")
-                    or (provider.schema if provider else ""),
-                    api_url=entry.get("api_url", "")
-                    or (provider.api_url if provider else ""),
-                    api_key=entry.get("api_key", "")
-                    or (provider.api_key if provider else ""),
-                    model=entry.get("model", ""),
-                )
+    def resolve_model(self, name: str) -> ModelSchema:
+        """根据模型名称获取转换后的模型配置"""
+        if name not in self.ability.keys():
+            return self.get_model(name)
 
-        transfers = data.get("transfer", [])
-        for entry in transfers:
-            self._config.transfers.append(
-                TransferConfig(
-                    from_model=entry.get("from", ""),
-                    as_model=entry.get("as", ""),
-                )
-            )
-
-    @property
-    def config(self) -> Config:
-        return self._config
-
-    def get_provider(self, name: str) -> ProviderConfig | None:
-        return self._config.providers.get(name)
-
-    def get_model(self, name: str) -> ModelConfig | None:
-        return self._config.models.get(name)
-
-    def get_client(self, name: str) -> AIClient:
-        model = self._config.models.get(name)
-        if model:
-            return model.get_client()
-        return None
-
-    def resolve_model(self, model_name: str) -> ModelConfig | None:
-        for t in self._config.transfers:
-            if t.from_model == model_name:
-                model = self.get_model(t.as_model)
-                if model:
-                    return model
-        return self.get_model(model_name)
-
-    @classmethod
-    def reset(cls):
-        cls._instance = None
-
-
-config = ConfigManager(Path(__file__).parent.parent.parent / "config.toml")
+        return self.get_model(self.ability[name])

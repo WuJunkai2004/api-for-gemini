@@ -1,0 +1,59 @@
+# Grovider Configuration Example
+# Copy this to config.toml and modify as needed.
+
+# -------------------------------------------------------------------------
+# 1. PROVIDERS
+# Define reusable backend settings.
+# Syntax: [provider.ID]
+# -------------------------------------------------------------------------
+[provider.google]
+template = "gemini"
+api_url = "https://generativelanguage.googleapis.com"
+api_key = "YOUR_GEMINI_API_KEY"
+
+[provider.openai_official]
+template = "openai"
+api_url = "https://api.openai.com/v1"
+api_key = "YOUR_OPENAI_API_KEY"
+
+[provider.deepseek_official]
+template = "deepseek" # Use "deepseek" template for reasoning_content support
+api_url = "https://api.deepseek.com/v1"
+api_key = "YOUR_DEEPSEEK_API_KEY"
+
+# -------------------------------------------------------------------------
+# 2. MODELS
+# Define models that can be reached. 
+# They can inherit from a provider or define their own credentials.
+# Syntax: [model.FRIENDLY_NAME]
+# -------------------------------------------------------------------------
+[model.gemini-1-5-flash]
+provider = "google"
+model = "gemini-1.5-flash"
+
+[model.gpt-4o]
+provider = "openai_official"
+model = "gpt-4o"
+
+[model.ds-chat]
+provider = "deepseek_official"
+model = "deepseek-chat"
+
+# Custom model without a provider
+[model.local-llama]
+template = "openai"
+api_url = "http://localhost:11434/v1"
+model = "llama3"
+
+# -------------------------------------------------------------------------
+# 3. TRANSFER (Routing Rules)
+# Map incoming model names to the models defined above.
+# Syntax: [[transfer]] (This is a list/array of tables)
+# -------------------------------------------------------------------------
+[[transfer]]
+make = "gemini-pro"
+to = "gemini-1-5-flash"
+
+[[transfer]]
+make = "gpt-4"
+to = "ds-chat"
