@@ -36,6 +36,8 @@ class DeepseekRequest(ClientRequest):
     frequency_penalty: Optional[float] = None
     n: Optional[int] = None
     user: Optional[str] = None
+    # For reasoning models
+    reasoning_effort: Optional[str] = None
     # For DeepSeek / reasoning models
     extra_body: Optional[dict[str, Any]] = None
 
@@ -134,8 +136,85 @@ class DeepseekRequest(ClientRequest):
             if role == "user" and len(tools) > 0:
                 raise RuntimeError("User message cannot contain tool calls")
 
+        # Handle tools
+        openai_tools: list[ChatCompletionToolParam] = []
+        for tool in data.tools or []:
+            if not tool.function_declarations:
+                continue
+            for func_decl in tool.function_declarations:
+                params = func_decl.parameters_json_schema
+                if not params:
+                    params = {"type": "object", "properties": {}}
+                openai_tools.append(
+                    ChatCompletionToolParam(
+                        type="function",
+                        function={
+                            "name": func_decl.name or "function",
+                            "description": func_decl.description or "Unknown function",
+                            "parameters": params,
+                        },
+                    )
+                )
+
+        # Handle generation config
+        temperature = None
+        top_p = None
+        max_tokens = None
+        stop = None
+        presence_penalty = None
+        frequency_penalty = None
+        tool_choice = None
+        response_format = None
+        reasoning_effort = None
+
+        if data.generation_config:
+            gc = data.generation_config
+            temperature = gc.temperature
+            top_p = gc.top_p
+            max_tokens = gc.max_output_tokens
+            stop = gc.stop_sequences
+            presence_penalty = gc.presence_penalty
+            frequency_penalty = gc.frequency_penalty
+
+            if gc.response_mime_type == "application/json":
+                if gc.response_json_schema:
+                    response_format = {
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "response",
+                            "schema": gc.response_json_schema,
+                            "strict": True,
+                        },
+                    }
+                else:
+                    response_format = {"type": "json_object"}
+
+            if gc.tool_config and gc.tool_config.function_calling_config:
+                fcc = gc.tool_config.function_calling_config
+                if fcc.mode == "ANY":
+                    tool_choice = "required"
+                elif fcc.mode == "NONE":
+                    tool_choice = "none"
+                elif fcc.mode == "AUTO":
+                    tool_choice = "auto"
+
+            if gc.thinking_config:
+                tc = gc.thinking_config
+                if hasattr(tc, "thinking_level") and tc.thinking_level:
+                    reasoning_effort = str(tc.thinking_level).lower()
+
         return DeepseekRequest(
             messages=messages,
             model=model_name,
             stream=isStream,
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+            stop=stop,
+            tools=openai_tools,
+            tool_choice=tool_choice,
+            response_format=response_format,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty,
+            reasoning_effort=reasoning_effort,
         )
