@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from google.genai.types import (
     Candidate,
