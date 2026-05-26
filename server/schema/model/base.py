@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -13,3 +13,6 @@ class ClientRequest(BaseModel, ABC, Generic[T]):
     @abstractmethod
     def build(data: APIRequest, model_name: str, isStream: bool = False) -> T:
         pass
+
+    def args(self) -> dict[str, Any]:
+        return self.model_dump(exclude_none=True)

@@ -19,3 +19,26 @@ def getClient(model: ModelSchema) -> AIClient:
         )
     else:
         raise ValueError(f"Unsupported model template: {model.template}")
+
+
+def getChatFuncion(model: ModelSchema, isStream=False):
+    client = getClient(model)
+
+    def openaiFuncs(client: OpenAIClient):
+        if isStream:
+            return client.chat.completions.create
+        else:
+            return client.chat.completions.create
+
+    def geminiFuncs(client: GeminiClient):
+        if isStream:
+            return client.aio.models.generate_content
+        else:
+            return client.aio.models.generate_content
+
+    if isinstance(client, OpenAIClient):
+        return openaiFuncs(client)
+    elif isinstance(client, GeminiClient):
+        return geminiFuncs(client)
+    else:
+        raise ValueError("Unsupported client type")
