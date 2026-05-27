@@ -29,5 +29,6 @@ packages = ["api_for_gemini"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/api_for_gemini/config.example.toml",
+    "/api_for_gemini",
+    "/VERSION.txt",
 ]
