@@ -24,8 +24,7 @@ from api_for_gemini.server.schema.request import APIRequest
 from api_for_gemini.server.schema.response import APIStreamChunk, APIStreamFinal
 from api_for_gemini.server.utils.aiclient import getChatFuncion
 from api_for_gemini.server.utils.config import ConfigManager
-from api_for_gemini.server.utils.data_store import save_request_log
-from api_for_gemini.server.utils.logger import log
+from api_for_gemini.utils.logger import log
 
 router = APIRouter()
 config = ConfigManager()
@@ -123,8 +122,6 @@ async def stream_generate_content(req: APIRequest, model: str):
         raise HTTPException(
             status_code=400, detail="Invalid request for the specified model"
         )
-
-    save_request_log(req, data.args())
 
     func = getChatFuncion(target, True)
     response_stream = await func(**data.args())

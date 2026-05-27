@@ -55,6 +55,13 @@ class Settings:
         start_parser.add_argument(
             "-c", "--config", dest="config_path", help="Path to config file"
         )
+        start_parser.add_argument(
+            "-d",
+            "--debug",
+            action="store_true",
+            dest="debug",
+            help="Enable debug mode with hot reload",
+        )
 
         self.args = parser.parse_args()
 

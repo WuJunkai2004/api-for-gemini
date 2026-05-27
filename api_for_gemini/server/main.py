@@ -10,7 +10,6 @@ from api_for_gemini.server.api.probe import router as probe_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("\033[H\033[J")
     yield
 
 
