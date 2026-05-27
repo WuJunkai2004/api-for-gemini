@@ -6,7 +6,7 @@ requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.136.3",
     "uvicorn>=0.34.0",
-    "uvloop>=0.22.0",
+    "uvloop>=0.22.0; sys_platform != 'win32'",
     "httptools>=0.7.0",
     "google-genai>=1.14.0",
     "openai>=2.38.0",
@@ -19,6 +19,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "VERSION.txt"
+pattern = "(?P<version>.*)"
 
 [tool.hatch.build.targets.wheel]
 packages = ["server"]
