@@ -12,7 +12,7 @@ def main():
 
     handler = handlers.get(settings.command or "")
     if handler:
-        handler(settings)
+        handler()
 
 if __name__ == "__main__":
     main()

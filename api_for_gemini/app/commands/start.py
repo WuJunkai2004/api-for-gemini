@@ -3,11 +3,13 @@ from pathlib import Path
 
 import uvicorn
 
+from api_for_gemini.app.utils.settings import Settings
 from api_for_gemini.utils.logger import log
 
 
-def start_handler(settings):
+def start_handler():
     """Handle the start command."""
+    settings = Settings()
     if settings.config_path:
         config_file = Path(settings.config_path)
         if not config_file.exists():

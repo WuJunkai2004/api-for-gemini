@@ -1,7 +1,11 @@
 import shutil
 from pathlib import Path
 
-def setup_handler(settings):
+from api_for_gemini.app.utils.settings import Settings
+
+
+def setup_handler():
+    settings = Settings()
     """Handle the setup command."""
     print(
         f"Setting up (global={settings.is_global}, local={settings.is_local}, config={settings.config_path})"
@@ -15,7 +19,9 @@ def setup_handler(settings):
     dst = Path(settings.config_path) if settings.config_path else Path("config.toml")
 
     if not src.exists():
-        print(f"Error: config.example.toml not found. (Checked CWD and {src.absolute()})")
+        print(
+            f"Error: config.example.toml not found. (Checked CWD and {src.absolute()})"
+        )
         return
 
     if dst.exists():
