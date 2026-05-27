@@ -45,9 +45,14 @@ class ChatCompletionReasoningMessageParam(ChatCompletionAssistantMessageParam):
     reasoning_content: Optional[str]
 
 
+DeepseekMessageParam = Union[
+    ChatCompletionMessageParam, ChatCompletionReasoningMessageParam
+]
+
+
 class DeepseekRequest(ClientRequest):
     model: str
-    messages: list[ChatCompletionMessageParam]
+    messages: list[DeepseekMessageParam]
     stream: Optional[bool] = None
     temperature: Optional[float] = None
     top_p: Optional[float] = None
@@ -146,15 +151,13 @@ class DeepseekRequest(ClientRequest):
                 payload = {
                     "role": "assistant",
                     "content": "".join(texts),
-                    "reasoning_content": "".join(thoughts)
-                    if len(thoughts) > 0
-                    else None,
+                    "reasoning_content": "".join(thoughts) or "<think></think>",
                 }
                 if tools:
-                    payload["tool_calls"] = tools
+                    payload["tool_calls"] = tools  # type: ignore
                 messages.append(
-                    ChatCompletionAssistantMessageParam(
-                        **payload,
+                    ChatCompletionReasoningMessageParam(
+                        **payload,  # type: ignore
                     )
                 )
             if role == "user" and len(tools) > 0:

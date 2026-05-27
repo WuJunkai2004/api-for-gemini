@@ -24,6 +24,8 @@ from server.schema.request import APIRequest
 from server.schema.response import APIStreamChunk, APIStreamFinal
 from server.utils.aiclient import getChatFuncion
 from server.utils.config import ConfigManager
+from server.utils.data_store import save_request_log
+from server.utils.logger import log
 
 router = APIRouter()
 config = ConfigManager()
@@ -108,6 +110,7 @@ async def stream_generate_content(req: APIRequest, model: str):
 
     new_model = target.model
     data: Optional[BaseRequest] = None
+    log("template").info(f"is {target.template}")
     match target.template:
         case "deepseek":
             data = DeepseekRequest.build(req, new_model, True)
@@ -121,8 +124,9 @@ async def stream_generate_content(req: APIRequest, model: str):
             status_code=400, detail="Invalid request for the specified model"
         )
 
+    save_request_log(req, data.args())
+
     func = getChatFuncion(target, True)
-    print(data.args())
     response_stream = await func(**data.args())
 
     async def _google_sse_generator():
