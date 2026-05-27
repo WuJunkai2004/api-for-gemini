@@ -17,6 +17,30 @@ from server.schema.model.base import ClientRequest
 from server.schema.request import APIRequest
 
 
+def clean_json_schema(schema: dict):
+    if not isinstance(schema, dict):
+        return schema
+
+    result = schema.copy()
+
+    # 1. 强制把 type 转换成小写
+    if "type" in result and isinstance(result["type"], str):
+        result["type"] = result["type"].lower()
+
+    # 2. 处理 object 类型
+    if result.get("type") == "object":
+        # 递归处理嵌套的 properties
+        if "properties" in result:
+            for key, val in result["properties"].items():
+                result["properties"][key] = clean_json_schema(val)
+
+    # 3. 处理 array 类型
+    if result.get("type") == "array" and "items" in result:
+        result["items"] = clean_json_schema(result["items"])
+
+    return result
+
+
 class ChatCompletionReasoningMessageParam(ChatCompletionAssistantMessageParam):
     reasoning_content: Optional[str]
 
@@ -182,8 +206,7 @@ class DeepseekRequest(ClientRequest):
                         "type": "json_schema",
                         "json_schema": {
                             "name": "response",
-                            "schema": gc.response_json_schema,
-                            "strict": True,
+                            "schema": clean_json_schema(gc.response_json_schema),
                         },
                     }
                 else:
@@ -201,7 +224,7 @@ class DeepseekRequest(ClientRequest):
             if gc.thinking_config:
                 tc = gc.thinking_config
                 if hasattr(tc, "thinking_level") and tc.thinking_level:
-                    reasoning_effort = str(tc.thinking_level).lower()
+                    reasoning_effort = str(tc.thinking_level).split(".")[-1].lower()
 
         return DeepseekRequest(
             messages=messages,
