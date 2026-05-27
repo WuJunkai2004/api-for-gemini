@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 import uvicorn
-from utils.logger import log
+
+from api_for_gemini.utils.logger import log
 
 
 def start_handler(settings):
@@ -18,7 +19,7 @@ def start_handler(settings):
     log("app").info(f"Starting API for Gemini (debug={settings.debug})...")
     uvicorn.run(
         "api_for_gemini.server.main:app",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=18000,
         reload=settings.debug,
         reload_dirs=["api_for_gemini/server"] if settings.debug else None,
