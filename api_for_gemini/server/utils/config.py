@@ -1,13 +1,16 @@
 try:
     import tomllib  # type: ignore
 except ImportError:
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore
 from pathlib import Path
 from typing import Literal, Optional
 
 from google.genai import Client as GeminiClient
 from openai import AsyncOpenAI as OpenAIClient
 from pydantic import BaseModel, model_validator
+
+from api_for_gemini.utils.logger import log
+from api_for_gemini.utils.path import CONFIG_DEFAULT
 
 AIClient = OpenAIClient | GeminiClient
 
@@ -96,10 +99,14 @@ class ConfigManager:
             config_path = Path("config.toml")
             if not config_path.exists():
                 # Then check next to the package (for development)
-                config_path = Path(__file__).parent.parent.parent.parent / "config.toml"
+                config_path = CONFIG_DEFAULT
 
         self._config = Config.model_validate(_load(Path(config_path)))
         self.ability = {pair.make: pair.to for pair in self._config.transfer}
+
+        log("config").info(f"Config loaded from {config_path}")
+        log("config").info(f"provider: {', '.join(self._config.provider.keys())}")
+        log("config").info(f"model: {', '.join(self._config.model.keys())}")
 
     def get_model(self, name: str) -> ModelSchema:
         """根据模型名称获取模型配置"""

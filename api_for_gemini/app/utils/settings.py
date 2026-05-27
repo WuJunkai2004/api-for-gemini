@@ -47,7 +47,7 @@ class Settings:
             "-n", "--new", action="store_true", help="Create a new configuration"
         )
         config_parser.add_argument(
-            "-a", "--add", action="store_true", help="Add a new provider/model"
+            "path", nargs="?", default=".", help="Path to create the config file (default: current directory)"
         )
 
         # start command

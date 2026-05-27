@@ -6,7 +6,19 @@ Gemini API proxy that receives Google Gemini API requests and routes them to Gem
 
 - **Python 3.10+** (uses `match/case`). Standard venv + pip.
 - Install: `pip install -e .`
-- Dev server: `python main.py` — uvicorn on port 18000 with hot reload. Do not restart it manually.
+- CLI entry point: `gema` (defined in `pyproject.toml` `[project.scripts]`).
+- Version is read from `VERSION.txt` via hatch dynamic versioning.
+
+## CLI Commands (`gema`)
+
+```
+gema setup [-g|--global] [-l|--local] [-c CONFIG_PATH]    # Initialize config.toml from example
+gema config -n [PATH]                                     # Create new config file at path (default: ./config.toml)
+gema start [-c CONFIG_PATH] [-d|--debug]                  # Start proxy server
+```
+
+- `gema start --debug` — uvicorn on `127.0.0.1:18000` with hot reload scoped to `api_for_gemini/server/`.
+- `gema start -c path/to/config.toml` — sets `GROVIDER_CONFIG` env var, which `ConfigManager` reads at init.
 
 ## Architecture
 
@@ -18,23 +30,49 @@ Request → APIRequest (Gemini types)
        → response conversion back to Gemini format
 ```
 
-- `main.py` — entry point, runs uvicorn.
-- `server/main.py` — FastAPI app, mounts routers under `/v1beta/models`.
-- `server/api/generateContent.py` — non-streaming `POST /{model}:generateContent`.
-- `server/api/generateStreaming.py` — streaming `POST /{model}:streamGenerateContent`. Both files dispatch by `target.template` via `match/case`.
-- `server/api/probe.py` — catch-all debug route.
-- `server/api/OldgenerateContent.py` — **legacy dead code**, do not reference.
+### Directory Layout
+
+```
+api_for_gemini/
+├── __init__.py
+├── config.example.toml          # Template copied by `gema setup` / `gema config -n`
+├── app/                         # CLI layer
+│   ├── main.py                  # Entry point: dispatches to command handlers
+│   ├── commands/
+│   │   ├── setup.py             # `gema setup`
+│   │   ├── config.py            # `gema config`
+│   │   └── start.py             # `gema start` — launches uvicorn
+│   └── utils/
+│       └── settings.py          # Settings singleton (argparse-based)
+├── server/                      # FastAPI server
+│   ├── main.py                  # FastAPI app, mounts routers under /v1beta/models
+│   ├── api/
+│   │   ├── generateContent.py   # POST /{model}:generateContent (non-streaming)
+│   │   ├── generateStreaming.py # POST /{model}:streamGenerateContent (streaming SSE)
+│   │   └── probe.py             # Catch-all debug route
+│   ├── schema/
+│   │   ├── request.py           # APIRequest model (Gemini-native input)
+│   │   ├── response.py          # APIResponse / APIStreamChunk / APIStreamFinal
+│   │   └── model/               # Per-backend request builders (ClientRequest subclasses)
+│   │       ├── base.py          # Abstract base: build(), args()
+│   │       ├── google.py        # GoogleRequest — pass-through to google-genai
+│   │       ├── openai.py        # OpenaiRequest — Gemini→OpenAI conversion
+│   │       └── deepseek.py      # DeepseekRequest — like OpenAI, preserves reasoning_content
+│   └── utils/
+│       ├── config.py            # ConfigManager singleton, loads config.toml
+│       ├── aiclient.py          # Client factory (GeminiClient / AsyncOpenAI)
+│       └── logger.py            # Probe request printer
+└── utils/
+    ├── logger.py                # LogFactory — main logger (used by app + server/config)
+    └── path.py                  # ROOT, CONFIG_EXAMPLE, CONFIG_DEFAULT constants
+```
+
+### Two Logger Modules
+
+- `api_for_gemini/utils/logger.py` — `LogFactory` singleton `log`, used by app commands and `config.py`. Import: `from api_for_gemini.utils.logger import log`.
+- `api_for_gemini/server/utils/logger.py` — `print_request()` helper for the probe route. Not a general-purpose logger.
 
 ### Schema-Driven Request Layer (`server/schema/model/`)
-
-Each backend template has a `ClientRequest` subclass with a static `build()` factory:
-
-| File | Class | Backend | Notes |
-|---|---|---|---|
-| `base.py` | `ClientRequest` | abstract base | `build(data, model_name, isStream)`, `args()` returns dict |
-| `google.py` | `GoogleRequest` | `google-genai` | Pass-through of `contents`/`config`/`model` |
-| `openai.py` | `OpenaiRequest` | `openai.AsyncOpenAI` | Full Gemini→OpenAI conversion (messages, tools, generation_config) |
-| `deepseek.py` | `DeepseekRequest` | `openai.AsyncOpenAI` | Like OpenAI but preserves `reasoning_content` (thinking) in assistant messages |
 
 - `build()` receives `APIRequest` (Gemini-native) and produces the backend-specific request.
 - `args()` serializes to a dict for `**kwargs` passing to the backend client.
@@ -42,16 +80,20 @@ Each backend template has a `ClientRequest` subclass with a static `build()` fac
 
 ### Response Layer (`server/schema/response.py`)
 
-Three `GenerateContentResponse` subclasses: `APIResponse`, `APIStreamChunk` (no usage), `APIStreamFinal` (forces `usage_metadata`). All responses are converted back to Gemini wire format.
+- `APIResponse` — non-streaming.
+- `APIStreamChunk` — streaming, no usage metadata.
+- `APIStreamFinal` — streaming final chunk, forces `usage_metadata`.
+- All responses are converted back to Gemini wire format.
 
 ### Config (`server/utils/config.py`)
 
-- `ConfigManager` — singleton, loads `config.toml` at import time from project root.
+- `ConfigManager` — singleton, loads `config.toml` at import time.
+- Config search order: (1) `GROVIDER_CONFIG` env var, (2) `config.toml` in CWD, (3) `CONFIG_DEFAULT` (package root).
 - Pydantic models: `ProviderSchema`, `ModelSchema`, `TransferSchema`, `Config`.
 - **`template`** (not `schema`) selects the backend: `"gemini"` | `"openai"` | `"deepseek"`.
 - Models inherit `template`/`api_url`/`api_key` from a named `[provider.*]`, or define them inline.
 - `[[transfer]]` entries reroute one model name to another via `resolve_model()`.
-- `config.toml` is **gitignored**; copy from `config.example.toml`.
+- `config.toml` is **gitignored**; copy from `api_for_gemini/config.example.toml`.
 
 ### Client Factory (`server/utils/aiclient.py`)
 
@@ -61,8 +103,7 @@ Three `GenerateContentResponse` subclasses: `APIResponse`, `APIStreamChunk` (no 
 ## Key Behaviors
 
 - No formal test runner. `tests/` contains standalone scripts (not pytest), run them individually with `python`.
-- No `os.environ.clear()` — the old AGENTS.md was wrong about this; the current code does not wipe env vars.
-- `ConfigManager` is a singleton. Call `ConfigManager.reset()` (or patch `_instance`) in tests to allow re-initialization.
+- Both `ConfigManager` and `Settings` are singletons. In tests, reset `ConfigManager._instance` / `Settings._instance` to allow re-initialization.
 - The codebase uses `match/case` on `target.template` extensively — adding a new template requires updating: `config.py` (`Literal` type), `schema/model/` (new class), `aiclient.py`, and both API route files.
 - `pydantic` is not a direct dependency — it comes from `fastapi` and `google-genai`.
 
@@ -72,4 +113,4 @@ Three `GenerateContentResponse` subclasses: `APIResponse`, `APIStreamChunk` (no 
 - `google-genai` — Gemini client, request/response types, and `pydantic` transitive dep
 - `openai` — OpenAI-compatible backend client
 - `tomli` — TOML parsing for Python < 3.12 (stdlib `tomllib` for 3.12+)
-- Build: `hatchling`, package is `server/` dir
+- Build: `hatchling`, package is `api_for_gemini/`
