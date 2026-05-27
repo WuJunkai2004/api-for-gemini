@@ -47,7 +47,10 @@ class Settings:
             "-n", "--new", action="store_true", help="Create a new configuration"
         )
         config_parser.add_argument(
-            "path", nargs="?", default=".", help="Path to create the config file (default: current directory)"
+            "path",
+            nargs="?",
+            default=".",
+            help="Path to create the config file (default: current directory)",
         )
 
         # start command
@@ -62,6 +65,9 @@ class Settings:
             dest="debug",
             help="Enable debug mode with hot reload",
         )
+
+        # context command (used as hook)
+        subparsers.add_parser("context", help="Provide context for Gemini CLI")
 
         self.args = parser.parse_args()
 

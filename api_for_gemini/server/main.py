@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api_for_gemini.server.api.generateContent import router as generate_content_router
-from api_for_gemini.server.api.generateStreaming import router as generate_streaming_router
+from api_for_gemini.server.api.generateStreaming import router as generate_stream_router
 from api_for_gemini.server.api.probe import router as probe_router
+from api_for_gemini.server.api.status import router as status_router
 
 
 @asynccontextmanager
@@ -25,5 +26,6 @@ app.add_middleware(
 
 
 app.include_router(generate_content_router, prefix="/v1beta/models")
-app.include_router(generate_streaming_router, prefix="/v1beta/models")
+app.include_router(generate_stream_router, prefix="/v1beta/models")
+app.include_router(status_router)
 app.include_router(probe_router)
