@@ -12,13 +12,16 @@ Gemini API proxy that receives Google Gemini API requests and routes them to Gem
 ## CLI Commands (`gema`)
 
 ```
-gema setup [-g|--global] [-l|--local] [-c CONFIG_PATH]    # Initialize config.toml from example
+gema setup [-g|--global] [-l|--local] [-c CONFIG_PATH]    # Initialize config.toml + Gemini hooks
 gema config -n [PATH]                                     # Create new config file at path (default: ./config.toml)
 gema start [-c CONFIG_PATH] [-d|--debug]                  # Start proxy server
+gema context                                               # Output JSON context for Gemini CLI hooks (used internally)
 ```
 
 - `gema start --debug` — uvicorn on `127.0.0.1:18000` with hot reload scoped to `api_for_gemini/server/`.
 - `gema start -c path/to/config.toml` — sets `GROVIDER_CONFIG` env var, which `ConfigManager` reads at init.
+- `gema setup -g` — also writes a `gema-context` SessionStart hook into `~/.gemini/settings.json`; `-l` writes to `.gemini/settings.json` in CWD.
+- `gema context` — checks if server is running on `127.0.0.1:18000`, auto-starts it in background if not, then prints JSON to stdout and exits. Used as a Gemini CLI hook, not meant for interactive use.
 
 ## Architecture
 
@@ -39,9 +42,10 @@ api_for_gemini/
 ├── app/                         # CLI layer
 │   ├── main.py                  # Entry point: dispatches to command handlers
 │   ├── commands/
-│   │   ├── setup.py             # `gema setup`
+│   │   ├── setup.py             # `gema setup` — also writes Gemini CLI hooks
 │   │   ├── config.py            # `gema config`
-│   │   └── start.py             # `gema start` — launches uvicorn
+│   │   ├── start.py             # `gema start` — launches uvicorn
+│   │   └── context.py           # `gema context` — JSON output for Gemini CLI hooks
 │   └── utils/
 │       └── settings.py          # Settings singleton (argparse-based)
 ├── server/                      # FastAPI server
@@ -49,6 +53,7 @@ api_for_gemini/
 │   ├── api/
 │   │   ├── generateContent.py   # POST /{model}:generateContent (non-streaming)
 │   │   ├── generateStreaming.py # POST /{model}:streamGenerateContent (streaming SSE)
+│   │   ├── status.py            # GET /status — health check
 │   │   └── probe.py             # Catch-all debug route
 │   ├── schema/
 │   │   ├── request.py           # APIRequest model (Gemini-native input)
@@ -88,7 +93,7 @@ api_for_gemini/
 ### Config (`server/utils/config.py`)
 
 - `ConfigManager` — singleton, loads `config.toml` at import time.
-- Config search order: (1) `GROVIDER_CONFIG` env var, (2) `config.toml` in CWD, (3) `CONFIG_DEFAULT` (package root).
+- Config search order: (1) explicit `config_path` argument, (2) `config.toml` in CWD, (3) `CONFIG_DEFAULT` (package root). The `start -c` flag sets `GROVIDER_CONFIG` env var before server import, which does not feed into ConfigManager directly — only `gema context` and the server startup set the path.
 - Pydantic models: `ProviderSchema`, `ModelSchema`, `TransferSchema`, `Config`.
 - **`template`** (not `schema`) selects the backend: `"gemini"` | `"openai"` | `"deepseek"`.
 - Models inherit `template`/`api_url`/`api_key` from a named `[provider.*]`, or define them inline.
