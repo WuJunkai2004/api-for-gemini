@@ -13,8 +13,8 @@ from openai.types.chat import (
     ChatCompletionUserMessageParam,
 )
 
-from server.schema.model.base import ClientRequest
-from server.schema.request import APIRequest
+from api_for_gemini.server.schema.model.base import ClientRequest
+from api_for_gemini.server.schema.request import APIRequest
 
 
 def clean_json_schema(schema: dict):
@@ -41,18 +41,9 @@ def clean_json_schema(schema: dict):
     return result
 
 
-class ChatCompletionReasoningMessageParam(ChatCompletionAssistantMessageParam):
-    reasoning_content: Optional[str]
-
-
-DeepseekMessageParam = Union[
-    ChatCompletionMessageParam, ChatCompletionReasoningMessageParam
-]
-
-
-class DeepseekRequest(ClientRequest):
+class OpenaiRequest(ClientRequest):
     model: str
-    messages: list[DeepseekMessageParam]
+    messages: list[ChatCompletionMessageParam]
     stream: Optional[bool] = None
     temperature: Optional[float] = None
     top_p: Optional[float] = None
@@ -73,7 +64,7 @@ class DeepseekRequest(ClientRequest):
     @staticmethod
     def build(
         data: APIRequest, model_name: str, isStream: bool = False
-    ) -> "DeepseekRequest":
+    ) -> "OpenaiRequest":
         messages: list[ChatCompletionMessageParam] = []
         # Add system instruction as the first message if it exists
         if data.system_instruction and data.system_instruction.parts:
@@ -151,12 +142,11 @@ class DeepseekRequest(ClientRequest):
                 payload = {
                     "role": "assistant",
                     "content": "".join(texts),
-                    "reasoning_content": "".join(thoughts) or "<think></think>",
                 }
                 if tools:
                     payload["tool_calls"] = tools  # type: ignore
                 messages.append(
-                    ChatCompletionReasoningMessageParam(
+                    ChatCompletionAssistantMessageParam(
                         **payload,  # type: ignore
                     )
                 )
@@ -229,7 +219,7 @@ class DeepseekRequest(ClientRequest):
                 if hasattr(tc, "thinking_level") and tc.thinking_level:
                     reasoning_effort = str(tc.thinking_level).split(".")[-1].lower()
 
-        return DeepseekRequest(
+        return OpenaiRequest(
             messages=messages,
             model=model_name,
             stream=isStream,
@@ -237,7 +227,7 @@ class DeepseekRequest(ClientRequest):
             top_p=top_p,
             max_tokens=max_tokens,
             stop=stop,
-            tools=openai_tools,
+            tools=openai_tools or None,
             tool_choice=tool_choice,
             response_format=response_format,
             presence_penalty=presence_penalty,

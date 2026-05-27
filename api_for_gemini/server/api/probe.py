@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 
-from server.utils.logger import print_request
+from api_for_gemini.server.utils.logger import print_request
 
 router = APIRouter()
 

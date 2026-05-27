@@ -1,4 +1,4 @@
-from server.utils.config import ConfigManager
+from api_for_gemini.server.utils.config import ConfigManager
 
 
 def check():

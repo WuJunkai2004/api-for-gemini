@@ -14,18 +14,18 @@ from google.genai.types import (
     TrafficType,
 )
 
-from server.schema.model import (
+from api_for_gemini.server.schema.model import (
     BaseRequest,
     DeepseekRequest,
     GoogleRequest,
     OpenaiRequest,
 )
-from server.schema.request import APIRequest
-from server.schema.response import APIStreamChunk, APIStreamFinal
-from server.utils.aiclient import getChatFuncion
-from server.utils.config import ConfigManager
-from server.utils.data_store import save_request_log
-from server.utils.logger import log
+from api_for_gemini.server.schema.request import APIRequest
+from api_for_gemini.server.schema.response import APIStreamChunk, APIStreamFinal
+from api_for_gemini.server.utils.aiclient import getChatFuncion
+from api_for_gemini.server.utils.config import ConfigManager
+from api_for_gemini.server.utils.data_store import save_request_log
+from api_for_gemini.server.utils.logger import log
 
 router = APIRouter()
 config = ConfigManager()

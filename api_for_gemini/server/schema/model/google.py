@@ -2,8 +2,8 @@ from typing import Optional
 
 from google.genai.types import Content, GenerateContentConfig
 
-from server.schema.model.base import ClientRequest
-from server.schema.request import APIRequest
+from api_for_gemini.server.schema.model.base import ClientRequest
+from api_for_gemini.server.schema.request import APIRequest
 
 
 class GoogleRequest(ClientRequest):

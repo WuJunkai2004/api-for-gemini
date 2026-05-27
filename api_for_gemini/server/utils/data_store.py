@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from server.utils.logger import log
+from api_for_gemini.server.utils.logger import log
 
 
 def save_request_log(request_data: Any, transformed_data: Any):

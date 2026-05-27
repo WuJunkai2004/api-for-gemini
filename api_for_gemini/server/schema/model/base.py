@@ -3,7 +3,7 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from server.schema.request import APIRequest
+from api_for_gemini.server.schema.request import APIRequest
 
 T = TypeVar("T", bound="ClientRequest")
 

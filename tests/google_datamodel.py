@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from server.schema.request import APIRequest
+from api_for_gemini.server.schema.request import APIRequest
 
 file_path = Path(__file__).parent.parent / "referrence/receive/1779807931.json"
 

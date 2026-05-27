@@ -1,4 +1,4 @@
-# Grovider
+# API for Gemini
 
 Gemini API proxy that receives Google Gemini API requests and routes them to Gemini or OpenAI-compatible backends based on `config.toml` rules.
 

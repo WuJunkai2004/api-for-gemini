@@ -13,6 +13,9 @@ dependencies = [
     "tomli>=2.4.1; python_version < '3.12'",
 ]
 
+[project.scripts]
+gema = "api_for_gemini.app.main:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -22,4 +25,9 @@ path = "VERSION.txt"
 pattern = "(?P<version>.*)"
 
 [tool.hatch.build.targets.wheel]
-packages = ["server"]
+packages = ["api_for_gemini"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/api_for_gemini/config.example.toml",
+]

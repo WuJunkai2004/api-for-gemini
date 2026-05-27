@@ -92,7 +92,11 @@ class ConfigManager:
             return
         self._loaded = True
         if not config_path:
-            config_path = Path(__file__).parent.parent.parent / "config.toml"
+            # First check CWD (standard for user running the CLI)
+            config_path = Path("config.toml")
+            if not config_path.exists():
+                # Then check next to the package (for development)
+                config_path = Path(__file__).parent.parent.parent.parent / "config.toml"
 
         self._config = Config.model_validate(_load(Path(config_path)))
         self.ability = {pair.make: pair.to for pair in self._config.transfer}

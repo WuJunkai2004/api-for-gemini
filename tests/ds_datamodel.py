@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-from server.schema.model.deepseek import DeepseekRequest
-from server.schema.request import APIRequest
+from api_for_gemini.server.schema.model.deepseek import DeepseekRequest
+from api_for_gemini.server.schema.request import APIRequest
 
 file_path = Path(__file__).parent.parent / "example/cli_sent.json"
 

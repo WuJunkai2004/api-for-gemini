@@ -3,9 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from server.api.generateContent import router as generate_content_router
-from server.api.generateStreaming import router as generate_streaming_router
-from server.api.probe import router as probe_router
+from api_for_gemini.server.api.generateContent import router as generate_content_router
+from api_for_gemini.server.api.generateStreaming import router as generate_streaming_router
+from api_for_gemini.server.api.probe import router as probe_router
 
 
 @asynccontextmanager

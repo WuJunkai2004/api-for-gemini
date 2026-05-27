@@ -1,7 +1,7 @@
 from google.genai import Client as GeminiClient
 from openai import AsyncOpenAI as OpenAIClient
 
-from server.utils.config import AIClient, ModelSchema
+from api_for_gemini.server.utils.config import AIClient, ModelSchema
 
 
 def getClient(model: ModelSchema) -> AIClient:
