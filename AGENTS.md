@@ -16,8 +16,10 @@ gema setup [-g|--global] [-l|--local] [-c CONFIG_PATH]    # Initialize config.to
 gema config -n [PATH]                                     # Create new config file at path (default: ./config.toml)
 gema start [-c CONFIG_PATH] [-d|--debug]                  # Start proxy server
 gema context                                               # Output JSON context for Gemini CLI hooks (used internally)
+gema ui [-p PORT] [-d]                                    # Start Mesop UI (requires pip install api-for-gemini[ui])
 ```
 
+- `gema ui` — launches Mesop UI on `127.0.0.1:32123` by default.
 - `gema start --debug` — uvicorn on `127.0.0.1:18000` with hot reload scoped to `api_for_gemini/server/`.
 - `gema start -c path/to/config.toml` — sets `GROVIDER_CONFIG` env var, which `ConfigManager` reads at init.
 - `gema setup -g` — also writes a `gema-context` SessionStart hook into `~/.gemini/settings.json`; `-l` writes to `.gemini/settings.json` in CWD.
