@@ -69,6 +69,15 @@ class Settings:
         # context command (used as hook)
         subparsers.add_parser("context", help="Provide context for Gemini CLI")
 
+        # ui command
+        ui_parser = subparsers.add_parser("ui", help="Start the Mesop UI")
+        ui_parser.add_argument(
+            "-p", "--port", type=int, default=32123, help="Port to run the UI on"
+        )
+        ui_parser.add_argument(
+            "-d", "--debug", action="store_true", help="Run in debug mode"
+        )
+
         self.args = parser.parse_args()
 
     @property

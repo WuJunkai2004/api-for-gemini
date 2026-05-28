@@ -13,6 +13,11 @@ dependencies = [
     "tomli>=2.4.1; python_version < '3.12'",
 ]
 
+[project.optional-dependencies]
+ui = [
+    "mesop>=0.12.0",
+]
+
 [project.scripts]
 gema = "api_for_gemini.app.main:main"
 
