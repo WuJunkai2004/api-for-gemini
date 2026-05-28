@@ -100,6 +100,9 @@ class ConfigManager:
             if not config_path.exists():
                 # Then check next to the package (for development)
                 config_path = CONFIG_DEFAULT
+            if not CONFIG_DEFAULT.exists():
+                log("config").error("No config file found. Please run `gema setup`")
+                exit(1)
 
         self._config = Config.model_validate(_load(Path(config_path)))
         self.ability = {pair.make: pair.to for pair in self._config.transfer}

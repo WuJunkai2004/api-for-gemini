@@ -1,23 +1,5 @@
 {
-    "context": {
-        "fileName": [
-            "GEMINI.md",
-            "AGENTS.md"
-        ]
-    },
-    "hooks": {
-        "SessionStart": [
-            {
-                "matcher": "*",
-                "hooks": [
-                    {
-                        "name": "gema-context",
-                        "type": "command",
-                        "command": "gema context",
-                        "timeout": 10000
-                    }
-                ]
-            }
-        ]
-    }
+  "context": {
+    "fileName": ["GEMINI.md", "AGENTS.md"]
+  }
 }
