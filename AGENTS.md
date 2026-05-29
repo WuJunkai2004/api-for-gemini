@@ -21,7 +21,7 @@ gema ui [-p PORT] [-d]                                    # Start Mesop UI (requ
 
 - `gema ui` — launches Mesop UI on `127.0.0.1:32123` by default.
 - `gema start --debug` — uvicorn on `127.0.0.1:18000` with hot reload scoped to `api_for_gemini/server/`.
-- `gema start -c path/to/config.toml` — sets `GROVIDER_CONFIG` env var, which `ConfigManager` reads at init.
+- `gema start -c path/to/config.toml` — specifies the configuration file to use.
 - `gema setup -g` — also writes a `gema-context` SessionStart hook into `~/.gemini/settings.json`; `-l` writes to `.gemini/settings.json` in CWD.
 - `gema context` — checks if server is running on `127.0.0.1:18000`, auto-starts it in background if not, then prints JSON to stdout and exits. Used as a Gemini CLI hook, not meant for interactive use.
 
@@ -95,7 +95,7 @@ api_for_gemini/
 ### Config (`server/utils/config.py`)
 
 - `ConfigManager` — singleton, loads `config.toml` at import time.
-- Config search order: (1) explicit `config_path` argument, (2) `config.toml` in CWD, (3) `CONFIG_DEFAULT` (package root). The `start -c` flag sets `GROVIDER_CONFIG` env var before server import, which does not feed into ConfigManager directly — only `gema context` and the server startup set the path.
+- Config search order: (1) explicit `config_path` argument passed to constructor, (2) `config.toml` in CWD, (3) `CONFIG_DEFAULT` (package root).
 - Pydantic models: `ProviderSchema`, `ModelSchema`, `TransferSchema`, `Config`.
 - **`template`** (not `schema`) selects the backend: `"gemini"` | `"openai"` | `"deepseek"`.
 - Models inherit `template`/`api_url`/`api_key` from a named `[provider.*]`, or define them inline.
