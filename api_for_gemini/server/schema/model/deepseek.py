@@ -237,7 +237,7 @@ class DeepseekRequest(ClientRequest):
             top_p=top_p,
             max_tokens=max_tokens,
             stop=stop,
-            tools=openai_tools,
+            tools=openai_tools or None,
             tool_choice=tool_choice,
             response_format=response_format,
             presence_penalty=presence_penalty,
