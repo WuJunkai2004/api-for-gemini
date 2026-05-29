@@ -21,15 +21,19 @@ template = "deepseek" # Use "deepseek" template for reasoning_content support
 api_url = "https://api.deepseek.com/v1"
 api_key = "YOUR_DEEPSEEK_API_KEY"
 
+[provider.ollama]
+template = "openai"
+api_url = "http://127.0.0.1:11434"
+
 # -------------------------------------------------------------------------
 # 2. MODELS
-# Define models that can be reached. 
+# Define models that can be reached.
 # They can inherit from a provider or define their own credentials.
 # Syntax: [model.FRIENDLY_NAME]
 # -------------------------------------------------------------------------
 [model.gemini-1-5-flash]
 provider = "google"
-model = "gemini-1.5-flash"
+model = "gemini-2.5-flash"
 
 [model.gpt-4o]
 provider = "openai_official"
@@ -37,13 +41,15 @@ model = "gpt-4o"
 
 [model.ds-chat]
 provider = "deepseek_official"
-model = "deepseek-chat"
+model = "deepseek-v4-flash"
 
 # Custom model without a provider
-[model.local-llama]
+# mincpm model family is fast and small, plz have a look
+[model.minicpm]
 template = "openai"
-api_url = "http://localhost:11434/v1"
-model = "llama3"
+api_url = "https://api.modelbest.cn/v1"
+api_key = "sk-pQ8L2zF3XmR5kY9wV4jB7hN1tC6vM0xG3aD5sH2bJ9lK4cZ8"
+model = "MiniCPM-V-4.6-Thinking"
 
 # -------------------------------------------------------------------------
 # 3. TRANSFER (Routing Rules)
@@ -51,9 +57,13 @@ model = "llama3"
 # Syntax: [[transfer]] (This is a list/array of tables)
 # -------------------------------------------------------------------------
 [[transfer]]
-make = "gemini-pro"
-to = "gemini-1-5-flash"
+make = "gemini-2.5-flash-lite"
+to = "minicpm"
 
 [[transfer]]
-make = "gpt-4"
+make = "gemini-3-flash-preview"
+to = "ds-chat"
+
+[[transfer]]
+make = "gemini-3.1-pro-preview-customtools"
 to = "ds-chat"
