@@ -111,13 +111,13 @@ class ConfigManager:
         log("config").info(f"provider: {', '.join(self._config.provider.keys())}")
         log("config").info(f"model: {', '.join(self._config.model.keys())}")
 
-    def get_model(self, name: str) -> ModelSchema:
+    def get_model(self, name: str) -> Optional[ModelSchema]:
         """根据模型名称获取模型配置"""
-        return self._config.model[name]
+        return self._config.model.get(name)
 
-    def resolve_model(self, name: str) -> ModelSchema:
+    def resolve_model(self, name: str) -> Optional[ModelSchema]:
         """根据模型名称获取转换后的模型配置"""
-        if name not in self.ability.keys():
+        if name not in self.ability:
             return self.get_model(name)
 
         return self.get_model(self.ability[name])

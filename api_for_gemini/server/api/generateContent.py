@@ -8,6 +8,7 @@ from google.genai.types import (
     Content,
     FinishReason,
     FunctionCall,
+    GenerateContentResponse,
     GenerateContentResponseUsageMetadata,
     Part,
     TrafficType,
@@ -138,4 +139,5 @@ async def generate_content(req: APIRequest, model: str):
                 by_alias=True, exclude_none=True, mode="json"
             )
         case "gemini":
+            assert isinstance(result, GenerateContentResponse)
             return result.model_dump(by_alias=True, exclude_none=True, mode="json")

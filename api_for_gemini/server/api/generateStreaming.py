@@ -129,26 +129,56 @@ async def stream_generate_content(req: APIRequest, model: str):
     async def _google_sse_generator():
         request_start_time = datetime.now(timezone.utc)
         async for chunk in response_stream:  # type: ignore
-            if not chunk.create_time:
-                chunk.create_time = request_start_time
-            if not chunk.usage_metadata:
-                chunk.usage_metadata = GenerateContentResponseUsageMetadata(
-                    traffic_type=TrafficType.ON_DEMAND
-                )
-            elif not chunk.usage_metadata.traffic_type:
-                chunk.usage_metadata.traffic_type = TrafficType.ON_DEMAND
+            # Determine if this is the final chunk based on finish_reason to match standard.jsonl
+            is_final = chunk.candidates and any(
+                c.finish_reason for c in chunk.candidates
+            )
 
-            if (
-                chunk.usage_metadata
-                and chunk.candidates
-                and any(c.finish_reason for c in chunk.candidates)
-            ):
+            update = {}
+            if not chunk.create_time:
+                update["create_time"] = request_start_time
+            if not chunk.model_version:
+                update["model_version"] = target.model or model
+
+            if not is_final:
+                # Non-final chunk: strictly only include traffic_type in usage_metadata to match standard.jsonl
+                current_traffic_type = TrafficType.ON_DEMAND
+                if chunk.usage_metadata and chunk.usage_metadata.traffic_type:
+                    current_traffic_type = chunk.usage_metadata.traffic_type
+
+                update["usage_metadata"] = GenerateContentResponseUsageMetadata(
+                    traffic_type=current_traffic_type
+                )
+            else:
+                # Final chunk: ensure traffic_type is set and keep full usage metadata
+                if not chunk.usage_metadata:
+                    update["usage_metadata"] = GenerateContentResponseUsageMetadata(
+                        traffic_type=TrafficType.ON_DEMAND
+                    )
+                elif not chunk.usage_metadata.traffic_type:
+                    new_usage = chunk.usage_metadata.model_copy(
+                        update={"traffic_type": TrafficType.ON_DEMAND}
+                    )
+                    update["usage_metadata"] = new_usage
+
+            if update:
+                chunk = chunk.model_copy(update=update)
+
+            if is_final:
                 api_chunk = APIStreamFinal(**chunk.model_dump(exclude_none=True))
             else:
                 api_chunk = APIStreamChunk(**chunk.model_dump(exclude_none=True))
 
+            # Exclude internal SDK fields and fields not present in standard.jsonl
+            exclude_fields = {
+                "sdk_http_response",
+                "model_status",
+                "parsed",
+                "automatic_function_calling_history",
+                "prompt_feedback",
+            }
             chunk_dict = api_chunk.model_dump(
-                by_alias=True, exclude_none=True, mode="json"
+                by_alias=True, exclude_none=True, mode="json", exclude=exclude_fields
             )
             yield f"data: {json.dumps(chunk_dict)}\n\n"
 

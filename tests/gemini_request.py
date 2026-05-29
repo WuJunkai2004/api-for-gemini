@@ -8,7 +8,7 @@ def test_request():
         }
     )
     
-    model_id = "gemini-2.5-flash-lite"
+    model_id = "gemini"
     
     print(f"Sending request to {model_id}...")
     response = client.models.generate_content(
