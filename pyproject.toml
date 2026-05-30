@@ -1,8 +1,19 @@
 [project]
 name = "api-for-gemini"
 dynamic = ["version"]
-description = "Use custom provider to API proxy for Gemini CLI"
+description = "Gemini API proxy for routing requests to Google or OpenAI-compatible backends"
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
+authors = [
+    { name = "Wu Junkai", email = "wu.junkai@qq.com" }
+]
+keywords = ["gemini", "openai", "deepseek", "proxy", "api", "cli"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "fastapi>=0.136.3",
     "uvicorn>=0.34.0",
@@ -12,6 +23,11 @@ dependencies = [
     "openai>=2.38.0",
     "tomli>=2.4.1; python_version < '3.12'",
 ]
+
+[project.urls]
+Homepage = "https://github.com/WuJunkai2004/api-for-gemini"
+Repository = "https://github.com/WuJunkai2004/api-for-gemini"
+Issues = "https://github.com/WuJunkai2004/api-for-gemini/issues"
 
 [project.scripts]
 gema = "api_for_gemini.app.main:main"
@@ -31,4 +47,6 @@ packages = ["api_for_gemini"]
 include = [
     "/api_for_gemini",
     "/VERSION.txt",
+    "/README.md",
+    "/LICENSE",
 ]
