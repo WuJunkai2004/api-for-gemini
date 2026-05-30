@@ -138,7 +138,7 @@ async def stream_generate_content(req: APIRequest, model: str):
             if not chunk.create_time:
                 update["create_time"] = request_start_time
             if not chunk.model_version:
-                update["model_version"] = target.model or model
+                update["model_version"] = model
 
             if not is_final:
                 # Non-final chunk: strictly only include traffic_type in usage_metadata to match standard.jsonl
@@ -197,7 +197,7 @@ async def stream_generate_content(req: APIRequest, model: str):
                     if tc.function.arguments:
                         accumulated_tool_calls[idx]["args"] += tc.function.arguments
 
-            gemini_chunk = _convert_openai_stream_chunk(chunk, target.model or model)
+            gemini_chunk = _convert_openai_stream_chunk(chunk, model)
 
             # If this is the final chunk, or if it has finish_reason, we might need to flush tool calls
             is_finished = chunk.choices and chunk.choices[0].finish_reason is not None
@@ -219,7 +219,7 @@ async def stream_generate_content(req: APIRequest, model: str):
                     usage_metadata=GenerateContentResponseUsageMetadata(
                         traffic_type=TrafficType.ON_DEMAND
                     ),
-                    model_version=target.model or model,
+                    model_version=model,
                     response_id=chunk.id,
                 )
             elif is_finished and not isinstance(gemini_chunk, APIStreamFinal):

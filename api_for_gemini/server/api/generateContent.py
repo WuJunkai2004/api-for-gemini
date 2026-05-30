@@ -140,4 +140,5 @@ async def generate_content(req: APIRequest, model: str):
             )
         case "gemini":
             assert isinstance(result, GenerateContentResponse)
+            result = result.model_copy(update={"model_version": model})
             return result.model_dump(by_alias=True, exclude_none=True, mode="json")
