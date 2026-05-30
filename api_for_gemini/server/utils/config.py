@@ -11,6 +11,7 @@ from pydantic import BaseModel, model_validator
 
 from api_for_gemini.utils.logger import log
 from api_for_gemini.utils.path import CONFIG_DEFAULT
+from api_for_gemini.utils.stars import StarMatch
 
 AIClient = OpenAIClient | GeminiClient
 
@@ -105,7 +106,7 @@ class ConfigManager:
                 exit(1)
 
         self._config = Config.model_validate(_load(Path(config_path)))
-        self.ability = {pair.make: pair.to for pair in self._config.transfer}
+        self._rules = [(StarMatch(p.make), p.to) for p in self._config.transfer]
 
         log("config").info(f"Config loaded from {config_path}")
         log("config").info(f"provider: {', '.join(self._config.provider.keys())}")
@@ -117,7 +118,8 @@ class ConfigManager:
 
     def resolve_model(self, name: str) -> Optional[ModelSchema]:
         """根据模型名称获取转换后的模型配置"""
-        if name not in self.ability:
-            return self.get_model(name)
+        for rule, to_model in self._rules:
+            if rule.match(name):
+                return self.get_model(to_model)
 
-        return self.get_model(self.ability[name])
+        return self.get_model(name)

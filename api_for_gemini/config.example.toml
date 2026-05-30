@@ -54,6 +54,8 @@ model = "MiniCPM-V-4.6-Thinking"
 # -------------------------------------------------------------------------
 # 3. TRANSFER (Routing Rules)
 # Map incoming model names to the models defined above.
+# The 'make' field supports the '*' wildcard (e.g., "gpt-4*", "*").
+# Rules are checked sequentially; the first matching rule is applied.
 # Syntax: [[transfer]] (This is a list/array of tables)
 # -------------------------------------------------------------------------
 [[transfer]]
@@ -65,5 +67,9 @@ make = "gemini-3-flash-preview"
 to = "ds-chat"
 
 [[transfer]]
-make = "gemini-3.1-pro-preview-customtools"
+make = "gemini-3*"
+to = "ds-chat"
+
+[[transfer]]
+make = "*"
 to = "ds-chat"
