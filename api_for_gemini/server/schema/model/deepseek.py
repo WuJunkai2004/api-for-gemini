@@ -193,6 +193,7 @@ class DeepseekRequest(ClientRequest):
         tool_choice = None
         response_format = None
         reasoning_effort = None
+        extra_body = {}
 
         if data.generation_config:
             gc = data.generation_config
@@ -226,7 +227,12 @@ class DeepseekRequest(ClientRequest):
 
             if gc.thinking_config:
                 tc = gc.thinking_config
-                if hasattr(tc, "thinking_level") and tc.thinking_level:
+
+                if isinstance(tc.include_thoughts, bool):
+                    extra_body["thinking"] = {
+                        "type": "enabled" if tc.include_thoughts else "disabled"
+                    }
+                if tc.thinking_level:
                     reasoning_effort = str(tc.thinking_level).split(".")[-1].lower()
 
         return DeepseekRequest(
@@ -243,4 +249,5 @@ class DeepseekRequest(ClientRequest):
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
             reasoning_effort=reasoning_effort,
+            extra_body=extra_body or None,
         )
