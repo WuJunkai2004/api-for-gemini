@@ -150,12 +150,20 @@ Define available models, optionally inheriting from a provider:
 
 ### Transfers (`[[transfer]]`)
 
-Route one model name to another:
+Route one model name to another. The `make` field supports the `*` wildcard for flexible matching (prefix, suffix, or middle):
 
 ```toml
 [[transfer]]
 make = "gemini-pro"      # Incoming request model name
 to = "gemini-2-5-flash"  # Actual model to route to
+
+[[transfer]]
+make = "gpt-4*"          # Suffix matching: gpt-4, gpt-4-turbo, gpt-4o, etc.
+to = "ds-chat"
+
+[[transfer]]
+make = "h*d"             # Middle matching: Matches "helloworld", "head", "hd", etc.
+to = "some-model"
 ```
 
 ## Architecture

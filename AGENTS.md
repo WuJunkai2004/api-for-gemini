@@ -99,7 +99,7 @@ api_for_gemini/
 - Pydantic models: `ProviderSchema`, `ModelSchema`, `TransferSchema`, `Config`.
 - **`template`** (not `schema`) selects the backend: `"gemini"` | `"openai"` | `"deepseek"`.
 - Models inherit `template`/`api_url`/`api_key` from a named `[provider.*]`, or define them inline.
-- `[[transfer]]` entries reroute one model name to another via `resolve_model()`.
+- `[[transfer]]` entries reroute one model name to another via `resolve_model()`. The `make` field supports the `*` wildcard (e.g., `gpt-4*`) for glob-like matching. Rules are processed in order, and the first match wins.
 - `config.toml` is **gitignored**; copy from `api_for_gemini/config.example.toml`.
 
 ### Client Factory (`server/utils/aiclient.py`)
