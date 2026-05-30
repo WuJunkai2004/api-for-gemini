@@ -20,13 +20,13 @@ A lightweight API proxy that receives Google Gemini API requests and routes them
 Using [uv](https://docs.astral.sh/uv/) (recommended):
 
 ```bash
-uv pip install -e .
+uv tool install api-for-gemini
 ```
 
 Using pip:
 
 ```bash
-pip install -e .
+pip install api-for-gemini
 ```
 
 After installation, the `gema` CLI command is available.

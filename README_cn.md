@@ -20,13 +20,13 @@
 使用 [uv](https://docs.astral.sh/uv/)（推荐）：
 
 ```bash
-uv pip install -e .
+uv tool install api-for-gemini
 ```
 
 使用 pip：
 
 ```bash
-pip install -e .
+pip install api-for-gemini
 ```
 
 安装完成后，`gema` 命令行工具即可使用。
