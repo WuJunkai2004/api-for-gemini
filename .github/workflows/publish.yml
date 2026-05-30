@@ -1,0 +1,36 @@
+name: Publish to PyPI
+
+on:
+  push:
+    paths:
+      - "VERSION.txt"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    permissions:
+      # This permission is required for Trusted Publishing (OIDC)
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Build Package
+        run: uv build
+
+      - name: Publish to PyPI
+        # uv publish will automatically use OIDC if configured on PyPI.
+        # If you prefer using a Token, set it as a GitHub Secret and use:
+        # run: uv publish --token ${{ secrets.PYPI_API_TOKEN }}
+        run: uv publish
