@@ -99,13 +99,27 @@ gema start --debug
 
 ### 3. Use with Gemini CLI
 
-One-command setup for Gemini CLI integration:
-
+1. **Auto-start setup (Recommended)**: Run the following command to write a `gema-context` hook to your global Gemini CLI settings. This ensures the proxy auto-starts whenever you launch Gemini CLI from any directory.
 ```bash
-gema setup -l
+gema setup -g
 ```
 
-This writes a `gema-context` hook to `.gemini/settings.json`. When Gemini CLI starts a session, the proxy auto-starts in the background.
+2. **Configure Environment**: Set the `GOOGLE_GEMINI_BASE_URL` environment variable to point to the proxy:
+```bash
+# Windows (PowerShell) - Current Session
+$env:GOOGLE_GEMINI_BASE_URL = "http://127.0.0.1:18000"
+# Windows (PowerShell) - Persistent (User level)
+[Environment]::SetEnvironmentVariable("GOOGLE_GEMINI_BASE_URL", "http://127.0.0.1:18000", "User")
+
+# Linux / macOS - Current Session
+export GOOGLE_GEMINI_BASE_URL="http://127.0.0.1:18000"
+# Linux / macOS - Persistent (Add to ~/.bashrc or ~/.zshrc)
+echo 'export GOOGLE_GEMINI_BASE_URL="http://127.0.0.1:18000"' >> ~/.zshrc
+```
+
+3. **Gemini CLI Auth**: Inside the Gemini CLI session, run the `/auth` command:
+   - Select **"2. Use Gemini API Key"**.
+   - Enter any string as the API key (the actual keys are managed in your `config.toml`).
 
 ## CLI Reference
 

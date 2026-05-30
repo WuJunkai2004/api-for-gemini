@@ -99,13 +99,27 @@ gema start --debug
 
 ### 3. 与 Gemini CLI 配合使用
 
-一键配置 Gemini CLI 集成：
-
+1. **自动启动配置 (推荐)**：执行以下命令，将 `gema-context` 钩子写入全局 Gemini CLI 设置。这可以确保无论你在哪个目录下启动 Gemini CLI，代理服务都会自动在后台启动。
 ```bash
-gema setup -l
+gema setup -g
 ```
 
-这会将 `gema-context` 钩子写入 `.gemini/settings.json`。当 Gemini CLI 启动会话时，代理会在后台自动启动。
+2. **配置环境变量**：设置 `GOOGLE_GEMINI_BASE_URL` 环境变量，将其指向代理服务。为了方便使用，建议将其设为永久环境变量：
+```bash
+# Windows (PowerShell) - 当前会话
+$env:GOOGLE_GEMINI_BASE_URL = "http://127.0.0.1:18000"
+# Windows (PowerShell) - 永久设置 (用户级)
+[Environment]::SetEnvironmentVariable("GOOGLE_GEMINI_BASE_URL", "http://127.0.0.1:18000", "User")
+
+# Linux / macOS - 当前会话
+export GOOGLE_GEMINI_BASE_URL="http://127.0.0.1:18000"
+# Linux / macOS - 永久设置 (添加到 ~/.bashrc 或 ~/.zshrc)
+echo 'export GOOGLE_GEMINI_BASE_URL="http://127.0.0.1:18000"' >> ~/.bashrc
+```
+
+3. **Gemini CLI 认证**：在 Gemini CLI 会话中，运行 `/auth` 命令：
+   - 选择 **"2. Use Gemini API Key"**。
+   - 输入任意字符串作为 API 密钥（实际的密钥由你的 `config.toml` 管理）。
 
 ## CLI 命令参考
 
