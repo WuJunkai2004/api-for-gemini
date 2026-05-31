@@ -84,6 +84,7 @@ def context_handler():
     }
 
     # Send JSON to stdout
-    print(json.dumps(context))
+    sys.stdout.write(f"{json.dumps(context)}\n")
+    sys.stdout.flush()
     # Exit with success
     sys.exit(0)

@@ -59,7 +59,7 @@ model = "MiniCPM-V-4.6-Thinking"
 # Syntax: [[transfer]] (This is a list/array of tables)
 # -------------------------------------------------------------------------
 [[transfer]]
-make = "gemini-2.5-flash-lite"
+make = "gemini-*-flash-lite"
 to = "minicpm"
 
 [[transfer]]
