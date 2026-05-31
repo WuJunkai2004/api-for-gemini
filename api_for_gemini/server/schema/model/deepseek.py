@@ -69,6 +69,7 @@ class DeepseekRequest(ClientRequest):
     reasoning_effort: Optional[str] = None
     # For DeepSeek / reasoning models
     extra_body: Optional[dict[str, Any]] = None
+    stream_options: Optional[dict[str, Any]] = None
 
     @staticmethod
     def build(
@@ -250,4 +251,5 @@ class DeepseekRequest(ClientRequest):
             frequency_penalty=frequency_penalty,
             reasoning_effort=reasoning_effort,
             extra_body=extra_body or None,
+            stream_options={"include_usage": True} if isStream else None,
         )

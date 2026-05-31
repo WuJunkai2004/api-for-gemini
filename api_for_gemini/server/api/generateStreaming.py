@@ -45,25 +45,31 @@ def _map_finish_reason(reason: str | None) -> FinishReason | None:
 def _convert_openai_stream_chunk(
     chunk, model_name: str
 ) -> APIStreamChunk | APIStreamFinal | None:
-    if not chunk.choices:
+    if not chunk.choices and not (hasattr(chunk, "usage") and chunk.usage):
         return None
-    choice = chunk.choices[0]
-    delta = choice.delta
+    choice = chunk.choices[0] if chunk.choices else None
+    delta = choice.delta if choice else None
     parts: list[Part] = []
-    if hasattr(delta, "reasoning_content") and delta.reasoning_content:
+    if delta and hasattr(delta, "reasoning_content") and delta.reasoning_content:
         parts.append(Part(text=delta.reasoning_content, thought=True))
-    if delta.content:
+    if delta and delta.content:
         parts.append(Part(text=delta.content))
 
-    # Skip empty chunks with no finish reason (tool_calls are handled by accumulator)
-    if not parts and not choice.finish_reason:
+    # Skip empty chunks with no finish reason and no usage
+    if (
+        not parts
+        and not (choice and choice.finish_reason)
+        and not (hasattr(chunk, "usage") and chunk.usage)
+    ):
         return None
 
-    candidate = Candidate(
-        content=Content(role="model", parts=parts),
-        finish_reason=_map_finish_reason(choice.finish_reason),
-        index=choice.index,
-    )
+    candidate = None
+    if choice:
+        candidate = Candidate(
+            content=Content(role="model", parts=parts),
+            finish_reason=_map_finish_reason(choice.finish_reason),
+            index=choice.index,
+        )
 
     create_time = None
     if hasattr(chunk, "created") and chunk.created:
@@ -78,15 +84,26 @@ def _convert_openai_stream_chunk(
             thoughts_token_count = getattr(
                 chunk.usage.completion_tokens_details, "reasoning_tokens", None
             )
+
+        cached_content_token_count = None
+        if (
+            hasattr(chunk.usage, "prompt_tokens_details")
+            and chunk.usage.prompt_tokens_details
+        ):
+            cached_content_token_count = getattr(
+                chunk.usage.prompt_tokens_details, "cached_tokens", None
+            )
+
         usage = GenerateContentResponseUsageMetadata(
             prompt_token_count=chunk.usage.prompt_tokens,
             candidates_token_count=chunk.usage.completion_tokens,
             total_token_count=chunk.usage.total_tokens,
             thoughts_token_count=thoughts_token_count,
+            cached_content_token_count=cached_content_token_count,
             traffic_type=TrafficType.ON_DEMAND,
         )
         return APIStreamFinal(
-            candidates=[candidate],
+            candidates=[candidate] if candidate else [],
             usage_metadata=usage,
             model_version=model_name,
             response_id=chunk.id,
@@ -94,7 +111,7 @@ def _convert_openai_stream_chunk(
         )
 
     return APIStreamChunk(
-        candidates=[candidate],
+        candidates=[candidate] if candidate else [],
         model_version=model_name,
         response_id=chunk.id,
         create_time=create_time,

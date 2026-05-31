@@ -60,6 +60,7 @@ class OpenaiRequest(ClientRequest):
     reasoning_effort: Optional[str] = None
     # For DeepSeek / reasoning models
     extra_body: Optional[dict[str, Any]] = None
+    stream_options: Optional[dict[str, Any]] = None
 
     @staticmethod
     def build(
@@ -233,4 +234,5 @@ class OpenaiRequest(ClientRequest):
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
             reasoning_effort=reasoning_effort,
+            stream_options={"include_usage": True} if isStream else None,
         )

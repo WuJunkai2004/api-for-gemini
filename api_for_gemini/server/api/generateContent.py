@@ -82,11 +82,21 @@ def _convert_openai_response(response, model_name: str) -> APIResponse:
                 response.usage.completion_tokens_details, "reasoning_tokens", None
             )
 
+        cached_content_token_count = None
+        if (
+            hasattr(response.usage, "prompt_tokens_details")
+            and response.usage.prompt_tokens_details
+        ):
+            cached_content_token_count = getattr(
+                response.usage.prompt_tokens_details, "cached_tokens", None
+            )
+
         usage = GenerateContentResponseUsageMetadata(
             prompt_token_count=response.usage.prompt_tokens,
             candidates_token_count=response.usage.completion_tokens,
             total_token_count=response.usage.total_tokens,
             thoughts_token_count=thoughts_token_count,
+            cached_content_token_count=cached_content_token_count,
             traffic_type=TrafficType.ON_DEMAND,
         )
 
