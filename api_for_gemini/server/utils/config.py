@@ -3,12 +3,13 @@ try:
 except ImportError:
     import tomli as tomllib  # type: ignore
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Optional
 
 from google.genai import Client as GeminiClient
 from openai import AsyncOpenAI as OpenAIClient
 from pydantic import BaseModel, model_validator
 
+from api_for_gemini.server.utils.types import ai_provider_template
 from api_for_gemini.utils.logger import log
 from api_for_gemini.utils.path import CONFIG_DEFAULT
 from api_for_gemini.utils.stars import StarMatch
@@ -17,7 +18,7 @@ AIClient = OpenAIClient | GeminiClient
 
 
 class ProviderSchema(BaseModel):
-    template: Literal["gemini", "openai", "deepseek"] = "openai"
+    template: ai_provider_template = "openai"
     api_url: str
     api_key: Optional[str] = None
 
@@ -26,7 +27,7 @@ class ModelSchema(BaseModel):
     provider: Optional[str] = None
     api_url: Optional[str] = None
     api_key: Optional[str] = None
-    template: Literal["gemini", "openai", "deepseek"] = "openai"
+    template: ai_provider_template = "openai"
     model: str
 
     # 验证：
