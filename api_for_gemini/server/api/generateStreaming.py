@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from google.genai.types import (
     Candidate,
@@ -24,6 +24,7 @@ from api_for_gemini.server.schema.request import APIRequest
 from api_for_gemini.server.schema.response import APIStreamChunk, APIStreamFinal
 from api_for_gemini.server.utils.aiclient import getChatFuncion
 from api_for_gemini.server.utils.config import ConfigManager
+from api_for_gemini.server.utils.headers import filter_headers, inject_headers
 from api_for_gemini.utils.logger import log
 
 router = APIRouter()
@@ -119,14 +120,13 @@ def _convert_openai_stream_chunk(
 
 
 @router.post("/{model}:streamGenerateContent")
-async def stream_generate_content(req: APIRequest, model: str):
+async def stream_generate_content(req: APIRequest, model: str, request: Request):
     target = config.resolve_model(model)
     if not target:
         raise HTTPException(status_code=404, detail="Model not found")
 
     new_model = target.model
     data: Optional[BaseRequest] = None
-    log("template").info(f"is {target.template}")
     match target.template:
         case "deepseek":
             data = DeepseekRequest.build(req, new_model, True)
@@ -140,8 +140,13 @@ async def stream_generate_content(req: APIRequest, model: str):
             status_code=400, detail="Invalid request for the specified model"
         )
 
+    filtered_headers = filter_headers(request)
     func = getChatFuncion(target, True)
-    response_stream = await func(**data.args())
+
+    log("router").info(f"{model} => {new_model}\tas template {target.template}")
+    response_stream = await func(
+        **data.args(), **inject_headers(target.template, filtered_headers)
+    )
 
     async def _google_sse_generator():
         request_start_time = datetime.now(timezone.utc)

@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from google.genai.types import (
     Candidate,
     Content,
@@ -24,6 +24,8 @@ from api_for_gemini.server.schema.request import APIRequest
 from api_for_gemini.server.schema.response import APIResponse
 from api_for_gemini.server.utils.aiclient import getChatFuncion
 from api_for_gemini.server.utils.config import ConfigManager
+from api_for_gemini.server.utils.headers import filter_headers, inject_headers
+from api_for_gemini.utils.logger import log
 
 router = APIRouter()
 config = ConfigManager()
@@ -114,7 +116,7 @@ def _convert_openai_response(response, model_name: str) -> APIResponse:
 
 
 @router.post("/{model}:generateContent")
-async def generate_content(req: APIRequest, model: str):
+async def generate_content(req: APIRequest, model: str, request: Request):
     target = config.resolve_model(model)
     if not target:
         raise HTTPException(status_code=404, detail="Model not found")
@@ -134,8 +136,13 @@ async def generate_content(req: APIRequest, model: str):
             status_code=400, detail="Invalid request for the specified model"
         )
 
+    filtered_headers = filter_headers(request)
     func = getChatFuncion(target, False)
-    result = await func(**data.args())
+
+    log("router").info(f"{model} => {new_model}\tas template {target.template}")
+    result = await func(
+        **data.args(), **inject_headers(target.template, filtered_headers)
+    )
 
     match target.template:
         case "deepseek":
