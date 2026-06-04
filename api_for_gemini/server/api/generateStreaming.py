@@ -76,22 +76,22 @@ def _convert_openai_stream_chunk(
         create_time = datetime.fromtimestamp(chunk.created, tz=timezone.utc)
 
     if hasattr(chunk, "usage") and chunk.usage:
-        thoughts_token_count = None
+        thoughts_token_count = 0
         if (
             hasattr(chunk.usage, "completion_tokens_details")
             and chunk.usage.completion_tokens_details
         ):
             thoughts_token_count = getattr(
-                chunk.usage.completion_tokens_details, "reasoning_tokens", None
+                chunk.usage.completion_tokens_details, "reasoning_tokens", 0
             )
 
-        cached_content_token_count = None
+        cached_content_token_count = 0
         if (
             hasattr(chunk.usage, "prompt_tokens_details")
             and chunk.usage.prompt_tokens_details
         ):
             cached_content_token_count = getattr(
-                chunk.usage.prompt_tokens_details, "cached_tokens", None
+                chunk.usage.prompt_tokens_details, "cached_tokens", 0
             )
 
         usage = GenerateContentResponseUsageMetadata(
