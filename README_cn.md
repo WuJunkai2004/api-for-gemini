@@ -1,5 +1,7 @@
 # API for Gemini
 
+[English](README.md) | 中文
+
 轻量级 API 代理，接收 Google Gemini API 请求并根据 `config.toml` 规则将其路由到 Gemini、OpenAI 兼容或 DeepSeek 后端。主要为 [Gemini CLI](https://github.com/google-gemini/gemini-cli) 设计，让你可以使用任意 LLM 提供商作为后端。
 
 ## 功能特性

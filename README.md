@@ -1,5 +1,7 @@
 # API for Gemini
 
+English | [中文](README_cn.md)
+
 A lightweight API proxy that receives Google Gemini API requests and routes them to Gemini, OpenAI-compatible, or DeepSeek backends based on `config.toml` rules. Designed primarily for use with [Gemini CLI](https://github.com/google-gemini/gemini-cli), enabling you to use any LLM provider as the backend.
 
 ## Features
