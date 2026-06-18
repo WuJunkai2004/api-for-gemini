@@ -44,7 +44,8 @@ provider = "deepseek_official"
 model = "deepseek-v4-flash"
 
 # Custom model without a provider
-# mincpm model family is fast and small, plz have a look
+# minicpm model family is fast and small, it is worth giving a star
+# see https://github.com/OpenBMB/MiniCPM-V/blob/main/docs/api.md for more details
 [model.minicpm]
 template = "openai"
 api_url = "https://api.modelbest.cn/v1"

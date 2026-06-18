@@ -55,10 +55,12 @@ api_for_gemini/
 │       ├── google.py            # GoogleRequest — pass-through to google-genai
 │       ├── openai.py            # OpenaiRequest — Gemini→OpenAI conversion
 │       └── deepseek.py          # DeepseekRequest — like OpenAI, preserves reasoning_content + extra_body
-├── server/utils/config.py      # ConfigManager singleton, loads config.toml
+├── server/utils/config.py       # ConfigManager singleton, loads config.toml
 ├── server/utils/aiclient.py     # Client factory with caching (GeminiClient / AsyncOpenAI)
-├── utils/logger.py             # LogFactory singleton `log` — used by app commands and config.py
-├── utils/path.py               # ROOT, PACKAGE_ROOT, CONFIG_EXAMPLE, CONFIG_DEFAULT, GEMINI_CONFIG_DIR
+├── server/utils/types.py        # Shared ai_provider_template Literal type
+├── server/utils/headers.py      # filter_headers() / inject_headers() for backend passthrough
+├── utils/logger.py              # LogFactory singleton `log` — used by app commands and config.py
+├── utils/path.py                # ROOT, PACKAGE_ROOT, CONFIG_EXAMPLE, CONFIG_DEFAULT, GEMINI_CONFIG_DIR
 └── utils/stars.py               # StarMatch — wildcard pattern matching for transfer rules
 ```
 
@@ -100,6 +102,6 @@ api_for_gemini/
 - No formal test runner. `tests/` contains standalone scripts (not pytest), run them individually with `python`.
 - `example/standard.jsonl` contains a reference SSE stream output — use it to verify streaming format compliance.
 - Both `ConfigManager` and `Settings` are singletons. In tests, reset `ConfigManager._instance` / `Settings._instance` to allow re-initialization.
-- The codebase uses `match/case` on `target.template` extensively — adding a new template requires updating: `config.py` (`Literal` type), `schema/model/` (new class), `aiclient.py`, and both API route files.
+- The codebase uses `match/case` on `target.template` extensively — adding a new template requires updating: `types.py` (`Literal` type), `schema/model/` (new class), `aiclient.py`, and both API route files.
 - `pydantic` is not a direct dependency — it comes from `fastapi` and `google-genai`.
-- `uvloop` and `httptools` are runtime dependencies on non-Windows platforms (see `pyproject.toml` platform markers).
+- `uvloop` is a runtime dependency on non-Windows platforms (see `pyproject.toml` platform marker).
