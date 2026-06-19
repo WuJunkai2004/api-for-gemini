@@ -24,7 +24,6 @@ from api_for_gemini.server.schema.request import APIRequest
 from api_for_gemini.server.schema.response import APIResponse
 from api_for_gemini.server.utils.aiclient import getChatFuncion
 from api_for_gemini.server.utils.config import ConfigManager
-from api_for_gemini.server.utils.headers import filter_headers, inject_headers
 from api_for_gemini.utils.logger import log
 
 router = APIRouter()
@@ -136,13 +135,10 @@ async def generate_content(req: APIRequest, model: str, request: Request):
             status_code=400, detail="Invalid request for the specified model"
         )
 
-    filtered_headers = filter_headers(request)
     func = getChatFuncion(target, False)
 
     log("router").info(f"{model} => {new_model}\tas template {target.template}")
-    result = await func(
-        **data.args(), **inject_headers(target.template, filtered_headers)
-    )
+    result = await func(**data.args())
 
     match target.template:
         case "deepseek":
