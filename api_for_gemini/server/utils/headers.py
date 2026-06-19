@@ -20,6 +20,8 @@ def filter_headers(req: Request) -> dict:
 
 
 def inject_headers(template: ai_provider_template, headers: dict) -> dict:
-    if template in ("openai", "deepseek"):
-        return {"extra_headers": headers}
-    return {}
+    match template:
+        case "openai":
+            return {"extra_headers": headers}
+        case _:
+            return {}
