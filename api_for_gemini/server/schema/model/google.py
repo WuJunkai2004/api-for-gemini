@@ -22,7 +22,7 @@ class GoogleRequest(ClientRequest):
                 config.system_instruction = data.system_instruction
             if data.tools is not None:
                 config.tools = data.tools
-            
+
             if config.thinking_config and "thinking" not in model_name.lower():
                 config.thinking_config = None
 
