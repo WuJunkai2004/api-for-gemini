@@ -11,7 +11,7 @@ from pydantic import BaseModel, model_validator
 
 from api_for_gemini.server.utils.types import ai_provider_template
 from api_for_gemini.utils.logger import log
-from api_for_gemini.utils.path import CONFIG_DEFAULT
+from api_for_gemini.utils.path import GEMINI_CONFIG_DIR
 from api_for_gemini.utils.stars import StarMatch
 
 AIClient = OpenAIClient | GeminiClient
@@ -97,12 +97,15 @@ class ConfigManager:
             return
         self._loaded = True
         if not config_path:
-            # First check CWD (standard for user running the CLI)
-            config_path = Path("config.toml")
-            if not config_path.exists():
-                # Then check next to the package (for development)
-                config_path = CONFIG_DEFAULT
-            if not config_path.exists():
+            for candidate in (
+                Path("config.toml"),
+                Path(".gemini") / "config.toml",
+                GEMINI_CONFIG_DIR / "config.toml",
+            ):
+                if candidate.exists():
+                    config_path = candidate
+                    break
+            else:
                 log("config").error("No config file found. Please run `gema setup`")
                 exit(1)
 
