@@ -60,7 +60,7 @@ api_for_gemini/
 ├── server/utils/types.py        # Shared ai_provider_template Literal type
 ├── server/utils/headers.py      # filter_headers() / inject_headers() for backend passthrough
 ├── utils/logger.py              # LogFactory singleton `log` — used by app commands and config.py
-├── utils/path.py                # ROOT, PACKAGE_ROOT, CONFIG_EXAMPLE, CONFIG_DEFAULT, GEMINI_CONFIG_DIR
+├── utils/path.py                # ROOT, PACKAGE_ROOT, CONFIG_EXAMPLE, GEMINI_CONFIG_DIR
 └── utils/stars.py               # StarMatch — wildcard pattern matching for transfer rules
 ```
 
@@ -85,7 +85,7 @@ api_for_gemini/
 ### Config (`server/utils/config.py`)
 
 - `ConfigManager` — singleton, loads `config.toml` at import time.
-- Config search order: (1) explicit `config_path` argument, (2) `config.toml` in CWD, (3) `CONFIG_DEFAULT` (repo root).
+- Config search order: (1) explicit `config_path` argument, (2) `config.toml` in CWD, (3) `.gemini/config.toml` in CWD, (4) `~/.gemini/config.toml` (global).
 - Pydantic models: `ProviderSchema`, `ModelSchema`, `TransferSchema`, `Config`.
 - **`template`** (not `schema`) selects the backend: `"gemini"` | `"openai"` | `"deepseek"`.
 - Models inherit `template`/`api_url`/`api_key` from a named `[provider.*]`, or define them inline.

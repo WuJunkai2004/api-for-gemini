@@ -140,6 +140,14 @@ gema context                                               # Output JSON context
 | `gema start -c ./my-config.toml` | Start server with a custom config file |
 | `gema start --debug` | Start server with hot reload (watches `api_for_gemini/server/`) |
 
+### Config Search Order
+
+When no explicit `-c` flag is provided, `gema start` looks for config files in this order:
+
+1. `./config.toml` (current working directory)
+2. `./.gemini/config.toml` (local project config)
+3. `~/.gemini/config.toml` (global config)
+
 ## Configuration Reference
 
 ### Providers (`[provider.ID]`)
