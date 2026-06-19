@@ -206,16 +206,7 @@ class DeepseekRequest(ClientRequest):
             frequency_penalty = gc.frequency_penalty
 
             if gc.response_mime_type == "application/json":
-                if gc.response_json_schema:
-                    response_format = {
-                        "type": "json_schema",
-                        "json_schema": {
-                            "name": "response",
-                            "schema": clean_json_schema(gc.response_json_schema),
-                        },
-                    }
-                else:
-                    response_format = {"type": "json_object"}
+                response_format = {"type": "json_object"}
 
             if gc.tool_config and gc.tool_config.function_calling_config:
                 fcc = gc.tool_config.function_calling_config
